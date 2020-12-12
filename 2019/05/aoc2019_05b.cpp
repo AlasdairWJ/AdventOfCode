@@ -102,10 +102,7 @@ bool execute(std::vector<int> intcode, std::queue<int> input)
 			break;
 		}
 		default:
-			printf("invalid op? %d\n", op_code);
 			return false;
-			position++;
-			break;
 		}
 	}
 
@@ -121,11 +118,7 @@ int main(int argc, const char* argv[])
 		intcode.push_back(value);
 
 	if (! execute(intcode, std::queue<int>({ 5 })))
-	{
 		puts("failed to execute");
-	}
 
 	return 0;
 }
-
-// 4609698
