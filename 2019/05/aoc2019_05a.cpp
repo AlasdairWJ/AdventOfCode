@@ -62,8 +62,7 @@ int execute(std::vector<int> intcode, std::queue<int> input)
 			break;
 		}
 		default:
-			position++;
-			break;
+			return false;
 		}
 	}
 
@@ -78,7 +77,8 @@ int main(int argc, const char* argv[])
 	while (scanf_s("%d,", &value) == 1)
 		intcode.push_back(value);
 
-	execute(intcode, std::queue<int>({ 1 }));
+	if (! execute(intcode, std::queue<int>({ 1 })))
+		puts("failed to execute");
 
 	return 0;
 }
