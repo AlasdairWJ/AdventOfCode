@@ -6,8 +6,6 @@
 
 using buffer_type = char[ROWS][COLUMNS + 1];
 
-buffer_type buf1, buf2;
-
 int neighbours(const buffer_type& board, const int target_row, const int target_column)
 {
 	const int row_min = target_row > 0 ? target_row - 1 : target_row;
@@ -53,11 +51,13 @@ bool update(const buffer_type& current, buffer_type& next)
 	return updates;
 }
 
+buffer_type buf1, buf2;
+
 int main(int argc, const char* argv[])
 {
 	{
 		int row = 0;
-		while (row < ROWS && scanf_s("%s\n", buf1[row], COLUMNS + 1) == 1)
+		while (row < ROWS && scanf_s("%s\n", (*current)[row], COLUMNS + 1) == 1)
 			row++;
 	}
 
