@@ -18,10 +18,10 @@ int main(int argc, const char* argv[])
 {
 	std::map<uint64_t, uint64_t> memory;
 
-	char mask[D + 1];
 	int limit;
 
 	char line[128];
+	char mask[D + 1];
 	while (gets_s(line))
 	{
 		if (strncmp(line, "mask", 4) == 0)
@@ -37,7 +37,6 @@ int main(int argc, const char* argv[])
 		}
 
 		uint64_t position, value;
-
 		sscanf_s(line, "mem[%llu] = %llu", &position, &value);
 
 		for (unsigned x = 0; x < limit; x++)
