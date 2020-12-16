@@ -1,6 +1,6 @@
 #include <cstdio>
-#include <vector>
-#include <utility>
+
+#define N 20
 
 struct range_t
 {
@@ -12,70 +12,62 @@ struct range_t
 	}
 };
 
+void read_ticket(const char* line, int (&ticket)[N])
+{
+	int offset = 0, n;
+	for (int i = 0; i < N; i++)
+	{
+		sscanf_s(line + offset, "%d%n", &ticket[i], &n);
+		offset += n + 1;
+	}
+}
+
 int main(int argc, const char* argv[])
 {
-	std::vector<std::pair<range_t, range_t>> valid_ranges;
-	int num_fields = 0;
-
-	char line[128];
-	while (gets_s(line) && line[0] != '\0')
+	range_t valid_ranges[N][2];
+	for (int i = 0; i < N; i++)
 	{
-		range_t ranges[2];
-		sscanf_s(line, "%*[^:]: %d-%d or %d-%d",
-			&ranges[0].m_lower, &ranges[0].m_upper,
-			&ranges[1].m_lower, &ranges[1].m_upper);
-
-		valid_ranges.emplace_back(ranges[0], ranges[1]);
-
-		//printf("% 3d - % 3d,  ", ranges[0].m_lower, ranges[0].m_upper);
-		//printf("% 3d - % 3d\n", ranges[1].m_lower, ranges[1].m_upper);
-
-		num_fields++;
+		scanf_s("%*[^:]: %d-%d or %d-%d\n",
+			&valid_ranges[i][0].m_lower, &valid_ranges[i][0].m_upper,
+			&valid_ranges[i][1].m_lower, &valid_ranges[i][1].m_upper);
 	}
 
-	gets_s(line); // your ticket
-	gets_s(line); // values
-	gets_s(line); // space
+	char line[128];
+	gets_s(line); // "your ticket:"
+	gets_s(line); // my ticket values
+	gets_s(line); // empty
+	gets_s(line); // "nearby tickets:"
 
-	gets_s(line); // nearby tickets
-
-	int error_sum = 0;
-	bool first = true;
+	int error_rate = 0;
 
 	while (gets_s(line) && line[0] != '\0')
 	{
-		int offset = 0, n;
+		int ticket[N];
+		read_ticket(line, ticket);
 
+		bool is_ticket_valid = true;
 
-		for (int i = 0; i < num_fields; i++)
+		for (const int& field_value : ticket)
 		{
-			bool is_valid = false;
-
-			int value;
-			sscanf_s(&line[offset], "%d%n", &value, &n);
-			offset += n + 1;
-
-			if (first)
-				printf("%d, ", value);
+			bool is_field_valid = false;
 
 			for (const auto& ranges : valid_ranges)
-				if (ranges.first(value) || ranges.second(value))
+				if (ranges[0](field_value) || ranges[1](field_value))
 				{
-					is_valid = true;
+					is_field_valid = true;
 					break;
 				}
 
-			if (!is_valid)
+			if (!is_field_valid)
 			{
-				printf("%d is invalid\n", value);
-				error_sum += value;
+				is_ticket_valid = false;
+				error_rate += field_value;
+				break;
 			}
 		}
-
-		first = false;
 	}
 	
-	printf("\n\n%d", error_sum);
+	printf("%d", error_rate);
 
 	return 0;
 }
