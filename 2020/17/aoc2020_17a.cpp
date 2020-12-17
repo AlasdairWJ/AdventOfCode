@@ -6,11 +6,12 @@ constexpr int POW(int base, int exponent)
 	return exponent == 0 ? 1 : base * POW(base, exponent - 1);
 }
 
-const int N = 22;
+const int N = 20; // board size + 2*number of iterations
 const int D = 3;
 const int ND = POW(N, D);
 
 const int I = 8;
+const int MAX_ITERATIONS = 6;
 
 using board_type = char[ND];
 
@@ -75,19 +76,19 @@ int main(int argc, const char* argv[])
 {
 	board_type *current = &buf1, *next = &buf2;
 
-	int pos[D] = { N/2, 0, 0 };
+	int pos[D] = { 0, 0, N/2 };
 	for (int i = 0; i < I; i++)
 	{
 		pos[1] = N/2 - I/2 + i;
 		for (int j = 0; j < I; j++)
 		{
-			pos[2] = N/2 - I/2 + j;
+			pos[0] = N/2 - I/2 + j;
 			get(*current, pos) = getchar();
 		}
 		getchar(); // nl
 	}
 
-	for (int it = 0; it < 6; it++)
+	for (int it = 0; it < MAX_ITERATIONS; it++)
 	{
 		update(*current, *next);
 		std::swap(current, next);
