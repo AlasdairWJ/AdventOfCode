@@ -86,7 +86,7 @@ bool simple_shunting_yard(std::list<token_t>& tokens, std::list<token_t>& output
 			}
 			else // ')'
 			{
-				while (!stack.empty() && stack.top().m_type == token_t::token_t::OPERATOR)
+				while (!stack.empty() && stack.top().m_type == token_t::OPERATOR)
 				{
 					output.push_back(stack.top());
 					stack.pop();
@@ -185,7 +185,3 @@ int main(int argc, const char* argv[])
 
 	return 0;
 }
-
-/*
-3 * 1740327120 * 9 * 8 + 6
-*/
