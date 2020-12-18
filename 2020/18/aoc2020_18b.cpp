@@ -96,7 +96,7 @@ bool shunting_yard(std::list<token_t>& tokens, std::list<token_t>& output)
 			}
 			else // if (token.m_symbol == ')')
 			{
-				while (!stack.empty() && stack.top().m_type == token_t::token_t::OPERATOR)
+				while (!stack.empty() && stack.top().m_type == token_t::OPERATOR)
 				{
 					output.push_back(stack.top());
 					stack.pop();
