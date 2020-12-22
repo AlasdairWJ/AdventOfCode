@@ -11,7 +11,7 @@ int main(int argc, const char* argv[])
 	int best_product = 1;
 
 	char bus[32];
-	while (!feof(stdin) && scanf_s("%[^,],", bus, (unsigned)_countof(bus)) != 0)
+	while (scanf_s("%[^,],", bus, (unsigned)_countof(bus)) == 1)
 	{
 		if (strcmp(bus, "x") == 0)
 			continue;
