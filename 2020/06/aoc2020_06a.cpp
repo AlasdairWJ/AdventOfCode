@@ -1,6 +1,5 @@
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <iostream>
+#include <string>
 
 int main(int argc, const char* argv[])
 {
@@ -8,12 +7,10 @@ int main(int argc, const char* argv[])
 
 	int sum = 0;
 
-	char line[64];
-	while (gets_s(line, (unsigned)_countof(line)))
+	std::string line;
+	while (std::getline(std::cin, line))
 	{
-		const int line_length = strlen(line);
-
-		if (line_length == 0)
+		if (line.empty())
 		{
 			int count = 0;
 			for (int i = 0; i < 26; i++)
@@ -27,8 +24,8 @@ int main(int argc, const char* argv[])
 			continue;
 		}
 
-		for (int i = 0; i < line_length; i++)
-			affirmative[line[i] - 'a'] = true;
+		for (const char letter : line)
+			affirmative[letter - 'a'] = true;
 	}
 
 	int count = 0;
@@ -38,7 +35,7 @@ int main(int argc, const char* argv[])
 
 	sum += count;
 
-	printf("%d", sum);
+	std::cout << sum;
 
 	return 0;
 }
