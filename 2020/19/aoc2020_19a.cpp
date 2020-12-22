@@ -1,8 +1,8 @@
 #include <cstdio>
 #include <iostream>
 #include <string>
-#include <vector>
 #include <map>
+#include <set>
 
 struct rule_t
 {
@@ -69,54 +69,45 @@ bool parse_rule(const char* line, rule_t& rule)
 	return false;
 }
 
-bool matches_rule(const char* line, const int id, int& length)
+bool matches_rule(const std::string& line, const int rule_id, const int position, int& final_positions)
 {
-	const rule_t& rule = rules_map.find(id)->second;
+	if (position >= line.size())
+		return false;
+
+	const rule_t& rule = rules_map.find(rule_id)->second;
 
 	if (rule.m_is_letter)
 	{
-		if (rule.m_letter != *line)
+		if (rule.m_letter != line[position])
 			return false;
 
-		length = 1;
+		final_positions = position + 1;
 		return true;
 	}
 
-	bool matches_first_set = true;
-
-	int new_length = 0;
-	for (int i = 0; i < rule.m_count[0]; i++)
+	for (int j = 0; j < 2; j++)
 	{
-		int match_length;
-		if (!matches_rule(line + new_length, rule.m_values[0][i], match_length))
+		if (rule.m_count[j] == 0)
+			continue;
+
+		bool is_match = true;
+
+		int current_position = position;
+		for (int i = 0; i < rule.m_count[j]; i++)
+			if (!matches_rule(line, rule.m_values[j][i], current_position, current_position))
+			{
+				is_match = false;
+				break;
+			}
+
+		if (is_match)
 		{
-			matches_first_set = false;
-			break;
+			final_positions = current_position;
+			return true;
 		}
-		new_length += match_length;
 	}
 
-	if (matches_first_set)
-	{
-		length = new_length;
-		return true;
-	}
-
-	if (!matches_first_set && rule.m_count[1] == 0)
-		return false;
-
-	new_length = 0;
-	for (int i = 0; i < rule.m_count[1]; i++)
-	{
-		int match_length;
-		if (!matches_rule(line + new_length, rule.m_values[1][i], match_length))
-			return false;
-
-		new_length += match_length;
-	}
-
-	length = new_length;
-	return true;
+	return false;
 }
 
 int main(int argc, const char* argv[])
@@ -133,9 +124,10 @@ int main(int argc, const char* argv[])
 	int count = 0;
 	while (std::getline(std::cin, line))
 	{
-		int length;
-		if (matches_rule(line.c_str(), 0, length) && length == line.size())
-			count++;
+		int final_position;
+		if (matches_rule(line, 0, 0, final_position))
+			if (final_position == line.size())
+				count++;
 	}
 
 	printf("%d", count);

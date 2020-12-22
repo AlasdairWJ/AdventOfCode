@@ -69,14 +69,14 @@ bool parse_rule(const char* line, rule_t& rule)
 	return false;
 }
 
-// dear god this was not how i wanted this to go
+// this was not how i wanted this to go
 
-bool matches_rule(const std::string& line, const int id, const int position, std::set<int>& final_positions)
+bool matches_rule(const std::string& line, const int rule_id, const int position, std::set<int>& final_positions)
 {
 	if (position >= line.size())
 		return false;
 
-	const rule_t& rule = rules_map.find(id)->second;
+	const rule_t& rule = rules_map.find(rule_id)->second;
 
 	if (rule.m_is_letter)
 	{
@@ -87,7 +87,7 @@ bool matches_rule(const std::string& line, const int id, const int position, std
 		return true;
 	}
 
-	if (id == 8)
+	if (rule_id == 8)
 	{
 		std::set<int> current_positions;
 		matches_rule(line, 42, position, current_positions);
@@ -105,7 +105,7 @@ bool matches_rule(const std::string& line, const int id, const int position, std
 		return !final_positions.empty();
 	}
 
-	if (id == 11)
+	if (rule_id == 11)
 	{
 		std::set<int> current_positions;
 		matches_rule(line, 42, position, current_positions);
