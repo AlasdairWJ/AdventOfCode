@@ -2,74 +2,23 @@
 #include <iostream>
 #include <string>
 #include <map>
-#include <set>
 
 struct rule_t
 {
-	int m_id;
+	int m_rule_id;
 
 	bool m_is_letter;
 	char m_letter;
 
-	int m_count[2];
-	int m_values[2][2];
+	struct {
+		int m_subrule_count;
+		int m_subrules[2];
+	} m_options[2];
 };
 
 std::map<int, rule_t> rules_map;
 
-bool parse_rule(const char* line, rule_t& rule)
-{
-	int n;
-	sscanf_s(line, "%d: %n", &rule.m_id, &n);
-
-	if (line[n] == '"')
-	{
-		rule.m_is_letter = true;
-		rule.m_letter = line[n+1];
-		return true;
-	}
-
-	int m = sscanf_s(line+n, "%d %d | %d %d",
-					 &rule.m_values[0][0],
-					 &rule.m_values[0][1],
-					 &rule.m_values[1][0],
-					 &rule.m_values[1][1]);
-
-	if (m == 4)
-	{
-		rule.m_count[0] = 2;
-		rule.m_count[1] = 2;
-		return true;
-	}
-
-	if (m == 2)
-	{
-		rule.m_count[0] = 2;
-		rule.m_count[1] = 0;
-		return true;
-	}
-
-	m = sscanf_s(line+n, "%d | %d",
-				 &rule.m_values[0][0],
-				 &rule.m_values[1][0]);
-
-	if (m == 2)
-	{
-		rule.m_count[0] = 1;
-		rule.m_count[1] = 1;
-		return true;
-	}
-	else if (m == 1)
-	{
-		rule.m_count[0] = 1;
-		rule.m_count[1] = 0;
-		return true;
-	}
-
-	return false;
-}
-
-bool matches_rule(const std::string& line, const int rule_id, const int position, int& final_positions)
+bool matches_rule(const std::string& line, const int rule_id, const int position, int& final_position)
 {
 	if (position >= line.size())
 		return false;
@@ -81,20 +30,20 @@ bool matches_rule(const std::string& line, const int rule_id, const int position
 		if (rule.m_letter != line[position])
 			return false;
 
-		final_positions = position + 1;
+		final_position = position + 1;
 		return true;
 	}
 
 	for (int j = 0; j < 2; j++)
 	{
-		if (rule.m_count[j] == 0)
+		if (rule.m_options[j].m_subrule_count == 0)
 			continue;
 
 		bool is_match = true;
 
 		int current_position = position;
-		for (int i = 0; i < rule.m_count[j]; i++)
-			if (!matches_rule(line, rule.m_values[j][i], current_position, current_position))
+		for (int i = 0; i < rule.m_options[j].m_subrule_count; i++)
+			if (!matches_rule(line, rule.m_options[j].m_subrules[i], current_position, current_position))
 			{
 				is_match = false;
 				break;
@@ -102,7 +51,7 @@ bool matches_rule(const std::string& line, const int rule_id, const int position
 
 		if (is_match)
 		{
-			final_positions = current_position;
+			final_position = current_position;
 			return true;
 		}
 	}
@@ -110,15 +59,41 @@ bool matches_rule(const std::string& line, const int rule_id, const int position
 	return false;
 }
 
+int read_list(const std::string& line, int& position, int* values)
+{
+	int i = 0, n;
+	while (position < line.size() && sscanf_s(&line[position], "%d%n", &values[i], &n) == 1)
+	{
+		position += n + 1;
+		i++;
+	}
+	return i;
+}
+
 int main(int argc, const char* argv[])
 {
 	std::string line;
 	while (std::getline(std::cin, line) && !line.empty())
 	{
-		rule_t rule = {};
-		parse_rule(line.c_str(), rule);
+		int rule_id;
 
-		rules_map.emplace(rule.m_id, rule);
+		int offset;
+		sscanf_s(line.c_str(), "%d: %n", &rule_id, &offset);
+
+		rule_t& rule = rules_map[rule_id]; // let this do the construction for us
+		rule.m_rule_id = rule_id;
+
+		if (line[offset] == '"')
+		{
+			rule.m_is_letter = true;
+			rule.m_letter = line[offset+1];
+		}
+		else
+		{
+			rule.m_options[0].m_subrule_count = read_list(line, offset, rule.m_options[0].m_subrules);
+			if (offset < line.size() && line[offset] == '|')
+				rule.m_options[1].m_subrule_count = read_list(line, ++offset, rule.m_options[1].m_subrules);
+		}
 	}
 
 	int count = 0;
