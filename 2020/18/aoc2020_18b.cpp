@@ -7,49 +7,53 @@
 
 struct token_t
 {
-	enum { PARENTHESES, NUMBER, OPERATOR } m_type;
+	enum { LEFT_PAREN, RIGHT_PAREN, NUMBER, OPERATOR } m_type;
 	union { char m_symbol; __int64 m_value; };
 };
 
 bool tokenise(const std::string& line, std::list<token_t>& output)
 {
-	for (int i = 0; i < line.size(); i++)
+	for (int i = 0; i < line.size();)
 	{
 		if (isspace(line[i]))
-			continue;
-
-		token_t token;	
-
-		switch (line[i])
 		{
-		case '+':
-		case '*':
-			token.m_type = token_t::OPERATOR;
-			token.m_symbol = line[i];
-			break;
+			i++;
+			continue;
+		}
 
-		case '(':
-		case ')':
-			token.m_type = token_t::PARENTHESES;
-			token.m_symbol = line[i];
-			break;
+		token_t token;
 
-		case '0':
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
+		int numeric_value, n;
+		if (sscanf_s(&line[i], "%d%n", &numeric_value, &n) == 1)
+		{
 			token.m_type = token_t::NUMBER;
-			token.m_value = line[i] - '0';
-			break;
+			token.m_value = numeric_value;
 
-		default:
-			return false;
+			i += n;
+		}
+		else
+		{
+			switch (line[i])
+			{
+			case '+':
+			case '*':
+				token.m_type = token_t::OPERATOR;
+				token.m_symbol = line[i++];
+				break;
+
+			case '(':
+				token.m_type = token_t::LEFT_PAREN;
+				token.m_symbol = line[i++];
+				break;
+
+			case ')':
+				token.m_type = token_t::RIGHT_PAREN;
+				token.m_symbol = line[i++];
+				break;
+
+			default:
+				return false;
+			}
 		}
 
 		output.push_back(token);
@@ -89,23 +93,20 @@ bool shunting_yard(std::list<token_t>& tokens, std::list<token_t>& output)
 			stack.push(token);
 			break;
 
-		case token_t::PARENTHESES:
-			if (token.m_symbol == '(')
-			{
-				stack.push(token);
-			}
-			else // if (token.m_symbol == ')')
-			{
-				while (!stack.empty() && stack.top().m_type == token_t::OPERATOR)
-				{
-					output.push_back(stack.top());
-					stack.pop();
-				}
+		case token_t::LEFT_PAREN:
+			stack.push(token);
+			break;
 
-				if (!stack.empty() && stack.top().m_type == token_t::PARENTHESES && stack.top().m_symbol == '(')
-				{
-					stack.pop();
-				}
+		case token_t::RIGHT_PAREN:
+			while (!stack.empty() && stack.top().m_type == token_t::OPERATOR)
+			{
+				output.push_back(stack.top());
+				stack.pop();
+			}
+
+			if (!stack.empty() && stack.top().m_type == token_t::LEFT_PAREN)
+			{
+				stack.pop();
 			}
 			break;
 		}
@@ -127,7 +128,8 @@ void print_tokens(const std::list<token_t>& tokens)
 		switch (token.m_type)
 		{
 		case token_t::OPERATOR:
-		case token_t::PARENTHESES:
+		case token_t::LEFT_PAREN:
+		case token_t::RIGHT_PAREN:
 			printf("%c ", token.m_symbol);
 			break;
 		case token_t::NUMBER:
