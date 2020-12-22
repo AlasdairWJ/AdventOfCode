@@ -55,13 +55,11 @@ buffer_type buf1, buf2;
 
 int main(int argc, const char* argv[])
 {
-	{
-		int row = 0;
-		while (row < ROWS && scanf_s("%s\n", (*current)[row], COLUMNS + 1) == 1)
-			row++;
-	}
+	board_type *current = &buf1, *next = &buf2;
 
-	buffer_type *current = &buf1, *next = &buf2;
+	int input_row = 0;
+	while (input_row < ROWS && scanf_s("%s\n", (*current)[input_row], COLUMNS + 1) == 1)
+		input_row++;
 
 	while (update(*current, *next))
 		std::swap(current, next);
