@@ -10,7 +10,7 @@ int main(int argc, const char* argv[])
 	
 	int n = 0;
 	char bus[32];
-	while (!feof(stdin) && scanf_s("%[^,],", bus, (unsigned)_countof(bus)) != 0)
+	while (scanf_s("%[^,],", bus, (unsigned)_countof(bus)) == 1)
 	{
 		if (strcmp(bus, "x") != 0)
 		{
@@ -37,6 +37,3 @@ int main(int argc, const char* argv[])
 
 	return 0;
 }
-
-// 93505395
-// 530015546283687
