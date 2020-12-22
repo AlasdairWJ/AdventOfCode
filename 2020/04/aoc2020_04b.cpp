@@ -101,11 +101,9 @@ int main(int argc, const char* argv[])
 	unsigned field_mask = 0;
 
 	char line[128];
-	while (gets_s(line, (unsigned)_countof(line)))
+	while (gets_s(line))
 	{
-		const int line_length = strlen(line);
-
-		if (line_length == 0)
+		if (line[0] == '\0')
 		{
 			if ((field_mask & 0b1111111) == 0b1111111)
 				count++;
@@ -114,24 +112,21 @@ int main(int argc, const char* argv[])
 			continue;
 		}
 
-		int offset = 0;
-
-		do
-		{
-			int n;
-			char field[32], value[32];
-			if (sscanf_s(&line[offset], "%[^:]:%[^ ]%n",
+		int offset = 0, n;
+		char field[32], value[32];
+		while (sscanf_s(&line[offset], "%[^:]:%[^ ]%n",
 				field, (unsigned)_countof(field),
-				value, (unsigned)_countof(value), &n) != 2)
-				break;
-
+				value, (unsigned)_countof(value), &n) == 2)
+		{
 			const int field_id = field_to_id(field);
 			if (field_id >= 0 && validate(field_id, value))
 				field_mask |= 1 << field_id;
 
-			offset += n + 1;
+			offset += n;
+			if (line[offset] == '\0')
+				break;
+			offset++;
 		}
-		while (offset < line_length);
 	}
 
 	if ((field_mask & 0b1111111) == 0b1111111)
