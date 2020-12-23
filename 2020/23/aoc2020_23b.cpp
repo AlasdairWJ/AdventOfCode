@@ -3,8 +3,9 @@
 
 // had to steal logic here because i suck
 
-#define N 9
-#define MOVES 100
+#define INPUT_SIZE 9
+#define N 1'000'000
+#define MOVES 10'000'000
 
 int next_cup[N];
 
@@ -14,11 +15,14 @@ int main(int argc, const char* argv[])
 	scanf_s("%1d", &first);
 
 	int current = first;
-	for (int n=1, next; n<N; n++)
+	for (int n=1, next; n<INPUT_SIZE; n++)
 	{
 		scanf_s("%1d", &next);
 		current = (next_cup[current] = next);
 	}
+
+	for (int n=INPUT_SIZE; n<N; n++)
+		current = (next_cup[current] = n+1);
 
 	current = (next_cup[current] = first);
 
@@ -45,12 +49,7 @@ int main(int argc, const char* argv[])
 		current = (next_cup[current] = next);
 	}
 
-	current = next_cup[1];
-	for (int n=1; n<N; n++)
-	{
-		printf("%d", current);
-		current = next_cup[current];
-	}
+	printf("%lld", (__int64)next_cup[1] * next_cup[next_cup[1]]);
 	
 	return 0;
 }	
