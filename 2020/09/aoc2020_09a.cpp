@@ -1,6 +1,8 @@
 #include <cstdio>
 #include <vector>
 
+#define PREAMBLE_SIZE 25
+
 bool contains_values_that_sum(const std::vector<int>& values, int sum)
 {
 	for (int i = 0; i < values.size(); i++)
@@ -18,7 +20,7 @@ int main(int argc, char const *argv[])
 	__int64 value;
 	while (scanf_s("%lld", &value) == 1)
 	{
-		if (n > 25 && !contains_values_that_sum(values, value))
+		if (n > PREAMBLE_SIZE && !contains_values_that_sum(values, value))
 			break;
 
 		values.push_back(value);
