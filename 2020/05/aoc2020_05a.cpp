@@ -5,7 +5,7 @@ int main(int argc, const char* argv[])
 	int max_seat_id = -1;
 
 	char line[11];
-	while (gets_s(line, (unsigned)_countof(line)))
+	while (gets_s(line))
 	{
 		int lower = 0, upper = 128;
 

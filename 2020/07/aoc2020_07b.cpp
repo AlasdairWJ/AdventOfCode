@@ -30,7 +30,7 @@ int count_bag_contents(const std::string& bag_colour)
 int main(int argc, const char* argv[])
 {
 	char line[128];
-	while (gets_s(line, (unsigned)_countof(line)))
+	while (gets_s(line))
 	{
 		char colour[64], colour_base[32];
 
@@ -38,7 +38,7 @@ int main(int argc, const char* argv[])
 		sscanf_s(line,
 				 "%s %s bags contain%n",
 				 colour, (unsigned)_countof(colour),
-				 colour_base, (unsigned)_countof(colour),
+				 colour_base, (unsigned)_countof(colour_base),
 				 &offset);
 
 		strcat(strcat(colour, " "), colour_base);
@@ -55,7 +55,7 @@ int main(int argc, const char* argv[])
 			sscanf_s(line + offset, " %d %s %s %n",
 					 &bag_count,
 					 colour, (unsigned)_countof(colour),
-					 colour_base, (unsigned)_countof(colour),
+					 colour_base, (unsigned)_countof(colour_base),
 					 &n);
 			
 			strcat(strcat(colour, " "), colour_base);

@@ -31,7 +31,7 @@ bool contains_shiny_gold(const std::string& bag_colour)
 int main(int argc, const char* argv[])
 {
 	char line[128];
-	while (gets_s(line, (unsigned)_countof(line)))
+	while (gets_s(line))
 	{
 		char colour[64], colour_base[32];
 
