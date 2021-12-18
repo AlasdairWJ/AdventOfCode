@@ -1,27 +1,17 @@
-#include <cstdio>
 #include <iostream>
 #include <string>
 #include <vector>
 
 int tree_count(const int dx, const int dy, const std::vector<std::string>& trees)
 {
-	const int max_y = (int)trees.size();
-
-	int x = 0;
-	int y = 0;
-
 	int count = 0;
 
-	do
+	for (int x = 0, y = 0; y < trees.size(); x += dx, y += dy)
 	{
-		const std::string& line = trees[y];
-		if (line[x % (int)line.size()] == '#')
+		const auto& row = trees[y];
+		if (row[x % (int)row.size()] == '#')
 			count++;
-
-		x += dx;
-		y += dy;
 	}
-	while (y < max_y);
 
 	return count;
 }
@@ -34,18 +24,17 @@ int main(int argc, const char* argv[])
 	while (std::getline(std::cin, line))
 		trees.push_back(line);
 
-	const int slopes[][2] = {
-		{ 1, 1 },
-		{ 3, 1 },
-		{ 5, 1 },
-		{ 7, 1 },
-		{ 1, 2 },
-	};
+	const int slopes[][2] = {{ 1, 1 },
+							 { 3, 1 },
+							 { 5, 1 },
+							 { 7, 1 },
+							 { 1, 2 }};
 
 	__int64 product = 1;
 	for (const auto& slope : slopes)
 		product *= tree_count(slope[0], slope[1], trees);
 
-	printf("%lld", product);
+	std::cout << product;
+
 	return 0;
 }

@@ -1,25 +1,34 @@
-#include <cstdio>
-#include <cstdlib>
+#include <iostream>
+#include <string>
+#include <algorithm> // std::count
 
 int main(int argc, const char* argv[])
 {
 	int valid_count = 0;
 
-	char letter, password[64];
-	int lower, upper;
-	while (scanf_s("%d-%d %c: %s", &lower, &upper, &letter, 1, password, (unsigned)_countof(password)) == 4)
+	std::string line;
+	while (std::getline(std::cin, line))
 	{
-		int letter_count = 0;
+		int lower, upper, n;
+		char letter;
+		sscanf_s(line.c_str(),
+				 "%d-%d %c: %n",
+				 &lower,
+				 &upper,
+				 &letter, 1u,
+				 &n);
 
-		for (int i = 0; password[i] != '\0'; i++)
-			if (password[i] == letter)
-				letter_count++;
+		const std::string password = line.substr(n);
+		
+		const int letter_count = std::count(password.begin(),
+											password.end(),
+											letter);
 
 		if (lower <= letter_count && letter_count <= upper)
 			valid_count++;
 	}
 
-	printf("%d", valid_count);
+	std::cout << valid_count;
 
 	return 0;
 }
