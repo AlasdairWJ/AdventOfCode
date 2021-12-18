@@ -1,22 +1,31 @@
-#include <cstdio>
-#include <vector>
+#include <iostream>
+#include <set>
+
+constexpr int target = 2020;
 
 int main(int argc, const char* argv[])
 {
-	std::vector<int> entries;
+	std::set<int> entries;
 
 	int value;
-	while (scanf_s("%d", &value) == 1)
-		entries.push_back(value);
+	while (std::cin >> value)
+		entries.insert(value);
 
-	for (int i = 0; i < entries.size(); i++)
-		for (int j = i + 1; j < entries.size(); j++)
-			for (int k = j + 1; k < entries.size(); k++)
-				if (entries[i] + entries[j] + entries[k] == 2020)
-				{
-					printf("%d", entries[i] * entries[j] * entries[k]);
-					return 0;
-				}
+	for (auto a = entries.begin(); a != entries.end(); ++a)
+	{
+		for (auto b = std::next(a); b != entries.end(); ++b)
+		{
+			const int sum = *a + *b;
 
-	return 1;
+			if (sum > target)
+				continue;
+
+			if (const auto c = entries.find(target - sum); c != entries.end())
+			{
+				std::cout << *a * *b * *c;
+				break;
+			}
+		}
+	}
+	return 0;
 }

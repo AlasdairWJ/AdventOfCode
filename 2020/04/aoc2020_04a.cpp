@@ -1,58 +1,51 @@
-#include <cstdio>
 #include <iostream>
 #include <string>
+#include <set>
+#include <sstream>
 
-int field_to_id(const char* field)
+const std::set<std::string> fields
 {
-	if (strcmp(field, "byr") == 0) return 0;
-	if (strcmp(field, "iyr") == 0) return 1;
-	if (strcmp(field, "eyr") == 0) return 2;
-	if (strcmp(field, "hgt") == 0) return 3;
-	if (strcmp(field, "hcl") == 0) return 4;
-	if (strcmp(field, "ecl") == 0) return 5;
-	if (strcmp(field, "pid") == 0) return 6;
-	if (strcmp(field, "cid") == 0) return 7;
-	return -1;
-}
+	"byr", "iyr", "eyr", "hgt", "hcl", "ecl", "pid", "cid"
+};
 
 int main(int argc, const char* argv[])
 {
-	int count = 0;
-	unsigned field_mask = 0;
+	int valid_passports = 0;
+	int field_count = 0;
 
-	char line[128];
-	while (gets_s(line))
+	std::string line;
+	while (std::getline(std::cin, line))
 	{
-		if (line[0] == '\0')
+		if (line.empty())
 		{
-			if ((field_mask & 0b1111111) == 0b1111111)
-				count++;
+			if (field_count == 7)
+				valid_passports++;
 
-			field_mask = 0;
+			field_count = 0;
 			continue;
 		}
+		
+		std::stringstream ss(line);
 
-		int offset = 0, n;
-		char field[32], value[32];
-		while (sscanf_s(&line[offset], "%[^:]:%[^ ]%n",
-				field, (unsigned)_countof(field),
-				value, (unsigned)_countof(value), &n) == 2)
+		std::string property;
+		while (ss >> property)
 		{
-			const int field_id = field_to_id(field);
-			if (field_id >= 0)
-				field_mask |= 1 << field_id;
+			const auto ix = property.find(':');
 
-			offset += n;
-			if (line[offset] == '\0')
-				break;
-			offset++;
+			const std::string field = property.substr(0, ix);
+
+			if (field == "cid")
+				continue;
+
+			if (fields.find(field) != fields.end())
+				field_count++;
 		}
 	}
 
-	if ((field_mask & 0b1111111) == 0b1111111)
-		count++;
+	if (field_count == 7)
+		valid_passports++;
 
-	printf("%d", count);
+	std::cout << valid_passports;
 
 	return 0;
 }

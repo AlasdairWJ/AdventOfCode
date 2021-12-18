@@ -1,138 +1,139 @@
-#include <cstdio>
+#include <iostream>
+#include <string>
+#include <map>
+#include <set>
+#include <sstream>
 #include <cctype>
-#include <cstdlib>
-#include <cstring>
+#include <algorithm> // std::all_of
 
-int field_to_id(const char* field)
+const std::set<std::string> valid_eye_colours
 {
-	if (strcmp(field, "byr") == 0) return 0;
-	if (strcmp(field, "iyr") == 0) return 1;
-	if (strcmp(field, "eyr") == 0) return 2;
-	if (strcmp(field, "hgt") == 0) return 3;
-	if (strcmp(field, "hcl") == 0) return 4;
-	if (strcmp(field, "ecl") == 0) return 5;
-	if (strcmp(field, "pid") == 0) return 6;
-	if (strcmp(field, "cid") == 0) return 7;
-	return -1;
-}
+	"amb",
+	"blu",
+	"brn",
+	"gry",
+	"grn",
+	"hzl",
+	"oth"
+};
 
-bool validate(const int field_id, const char* value)
+const std::map<std::string, bool(*)(const std::string&)> validators
 {
-	switch (field_id)
 	{
-	case 0: // byr
+		"byr",
+		[](const std::string& value) -> bool
+		{
+			const int year = std::stoi(value);
+			return year >= 1920 && year <= 2002;
+		}
+	},
 	{
-		const int year = std::strtol(value, nullptr, 10);
-		return year >= 1920 && year <= 2002;
-	}
-	case 1: // iyr
+		"iyr",
+		[](const std::string& value) -> bool
+		{
+			const int year = std::stoi(value);
+			return year >= 2010 && year <= 2020;
+		}
+	},
 	{
-		const int year = std::strtol(value, nullptr, 10);
-		return year >= 2010 && year <= 2020;
-	}
-	case 2: // eyr
+		"eyr",
+		[](const std::string& value) -> bool
+		{
+			const int year = std::stoi(value);
+			return year >= 2020 && year <= 2030;
+		}
+	},
 	{
-		const int year = std::strtol(value, nullptr, 10);
-		return year >= 2020 && year <= 2030;
-	}
-	case 3: // hgt
-	{
-		int x;
-		char unit[10];
-		if (sscanf_s(value, "%d%s", &x,
-			unit, (unsigned)_countof(unit)) != 2)
-			return false;
+		"hgt",
+		[](const std::string& value) -> bool
+		{
+			std::stringstream ss(value);
 
-		if (strcmp(unit, "in") == 0)
-			return 59 <= x && x <= 76;
-		else if (strcmp(unit, "cm") == 0)
-			return 150 <= x && x <= 193;
-		return false;
-	}
-	case 4: // hcl
+			int x;
+			ss >> x;
+
+			std::string unit;
+			ss >> unit;
+
+			if (unit == "in")
+				return 59 <= x && x <= 76;
+
+			if (unit == "cm")
+				return 150 <= x && x <= 193;
+
+			return false;
+		}
+	},
 	{
-		if (value[0] != '#')
-			return false;
-
-		if (strlen(value) != 7)
-			return false;
-
-		for (int i = 1; i < 7; i++)
-			if (!isxdigit(value[i]))
+		"hcl",
+		[](const std::string& value) -> bool
+		{
+			if (value.size() != 7)
 				return false;
 
-		return true;
-	}
-	case 5: // ecl
-	{
-		if (strcmp(value, "amb") == 0) return true;
-		if (strcmp(value, "blu") == 0) return true;
-		if (strcmp(value, "brn") == 0) return true;
-		if (strcmp(value, "gry") == 0) return true;
-		if (strcmp(value, "grn") == 0) return true;
-		if (strcmp(value, "hzl") == 0) return true;
-		if (strcmp(value, "oth") == 0) return true;
-		return false;
-	}
-	case 6: // pid
-	{
-		if (strlen(value) != 9)
-			return false;
-
-		for (int i = 0; i < 9; i++)
-			if (!isdigit(value[i]))
+			if (value[0] != '#')
 				return false;
 
-		return true;
+			return std::all_of(value.begin() + 1, value.end(), isxdigit);
+		}
+	},
+	{
+		"ecl",
+		[](const std::string& value) -> bool
+		{
+			return valid_eye_colours.find(value) != valid_eye_colours.end();
+		}
+	},
+	{
+		"pid",
+		[](const std::string& value) -> bool
+		{
+			return value.size() == 9 && std::all_of(value.begin(), value.end(), isdigit);
+		}
 	}
-	case 7:// cid
-		return true;
-
-	default:
-		return false;
-	}
-}
+};
 
 int main(int argc, const char* argv[])
 {
-	int count = 0;
-	int line_count = 0;
+	int valid_passports = 0;
+	int valid_field_count = 0;
 
-	unsigned field_mask = 0;
-
-	char line[128];
-	while (gets_s(line))
+	std::string line;
+	while (std::getline(std::cin, line))
 	{
-		if (line[0] == '\0')
+		if (line.empty())
 		{
-			if ((field_mask & 0b1111111) == 0b1111111)
-				count++;
+			if (valid_field_count == 7)
+				valid_passports++;
 
-			field_mask = 0;
+			valid_field_count = 0;
 			continue;
 		}
 
-		int offset = 0, n;
-		char field[32], value[32];
-		while (sscanf_s(&line[offset], "%[^:]:%[^ ]%n",
-				field, (unsigned)_countof(field),
-				value, (unsigned)_countof(value), &n) == 2)
-		{
-			const int field_id = field_to_id(field);
-			if (field_id >= 0 && validate(field_id, value))
-				field_mask |= 1 << field_id;
+		std::stringstream ss(line);
 
-			offset += n;
-			if (line[offset] == '\0')
-				break;
-			offset++;
+		std::string property;
+		while (ss >> property)
+		{
+			const auto ix = property.find(':');
+
+			const std::string field = property.substr(0, ix);
+
+			if (field == "cid")
+				continue;
+
+			const std::string value = property.substr(ix + 1);
+
+			const auto validator = validators.find(field);
+			if (validator != validators.end() && validator->second(value))
+				valid_field_count++;
 		}
 	}
 
-	if ((field_mask & 0b1111111) == 0b1111111)
-		count++;
+	if (valid_field_count == 7)
+		valid_passports++;
 
-	printf("%d", count);
+	std::cout << valid_passports;
 
 	return 0;
 }
