@@ -1,9 +1,10 @@
 #include <iostream>
 #include <string>
+#include <algorithm> // std::count, std::fill 
 
 int main(int argc, const char* argv[])
 {
-	bool affirmative[26] = {};
+	bool responses[26] = {};
 
 	int sum = 0;
 
@@ -12,28 +13,16 @@ int main(int argc, const char* argv[])
 	{
 		if (line.empty())
 		{
-			int count = 0;
-			for (int i = 0; i < 26; i++)
-			{
-				if (affirmative[i])
-					count++;
-
-				affirmative[i] = false;
-			}
-			sum += count;
+			sum += std::count(std::begin(responses), std::end(responses), true);
+			std::fill(std::begin(responses), std::end(responses), false);
 			continue;
 		}
 
 		for (const char letter : line)
-			affirmative[letter - 'a'] = true;
+			responses[letter - 'a'] = true;
 	}
 
-	int count = 0;
-	for (int i = 0; i < 26; i++)
-		if (affirmative[i])
-			count++;
-
-	sum += count;
+	sum += std::count(std::begin(responses), std::end(responses), true);
 
 	std::cout << sum;
 
