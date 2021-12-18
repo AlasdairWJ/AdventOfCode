@@ -1,28 +1,27 @@
-#include <cstdio>
 #include <iostream>
 #include <string>
 #include <vector>
+#include <map>
 
-enum Op { INVALID, ACC, JMP, NOP };
+enum OpCode { ACC, JMP, NOP };
 
-Op op_code_from_label(const char* label)
+const std::map<std::string, OpCode> op_codes
 {
-	if (strcmp(label, "acc") == 0) return ACC;
-	if (strcmp(label, "jmp") == 0) return JMP;
-	if (strcmp(label, "nop") == 0) return NOP;
-	return INVALID;
-}
+	{ "acc", ACC },
+	{ "jmp", JMP },
+	{ "nop", NOP }
+};
+
+using Program = std::vector<std::pair<OpCode, int>>;
 
 int main(int argc, const char* argv[])
 {
-	std::vector<std::pair<Op, int>> program;
+	Program program;
 
-	{
-		char operation[10];
-		int value;
-		while (scanf_s("%s %d", operation, (unsigned)_countof(operation), &value) == 2)
-			program.emplace_back(op_code_from_label(operation), value);
-	}
+	std::string op;
+	int value;
+	while (std::cin >> op, std::cin >> value)
+		program.emplace_back(op_codes.find(op)->second, value);
 
 	std::vector<bool> has_been_executed(program.size());
 
@@ -30,21 +29,21 @@ int main(int argc, const char* argv[])
 	int pc = 0;
 	while (pc < program.size())
 	{
-		const auto& instruction = program[pc];
+		const auto& [op, value] = program[pc];
 
 		if (has_been_executed[pc])
 			break;
 
 		has_been_executed[pc] = true;
 
-		switch (instruction.first)
+		switch (op)
 		{
 		case ACC:
-			acc += instruction.second;
+			acc += value;
 			pc++;
 			break;
 		case JMP:
-			pc += instruction.second;
+			pc += value;
 			break;
 		case NOP:
 			pc++;
@@ -54,7 +53,7 @@ int main(int argc, const char* argv[])
 		}
 	}
 
-	printf("%d", acc);
+	std::cout << acc;
 
 	return 0;
 }
