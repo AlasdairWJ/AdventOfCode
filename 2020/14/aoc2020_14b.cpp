@@ -1,78 +1,66 @@
-#include <cstdio>
-#include <cstdint>
+#include <iostream>
+#include <string>
 #include <map>
+#include <algorithm> // std::count
 
-#define D 36
-
-void clear_bit(uint64_t& mask, const int bit)
-{
-	mask &= ~(1llu << bit);
-}
-
-void set_bit(uint64_t& mask, const int bit)
-{
-	mask |= 1llu << bit;
-}
+template <typename T> T& clrb(T& mask, const int bit) { return mask &= ~(T(1) << bit); }
+template <typename T> T& setb(T& mask, const int bit) { return mask |= T(1) << bit; }
 
 int main(int argc, const char* argv[])
 {
 	std::map<uint64_t, uint64_t> memory;
 
-	int limit;
+	unsigned limit;
+	std::string mask;
 
-	char line[128];
-	char mask[D + 1];
-	while (gets_s(line))
+	std::string line;
+	while (std::getline(std::cin, line))
 	{
-		if (strncmp(line, "mask", 4) == 0)
+		if (strncmp(line.c_str(), "mask", 4) == 0)
 		{
-			sscanf_s(line, "mask = %s", mask, (unsigned)_countof(mask));
-
-			int count = 0;
-			for (char c : mask)
-				if (c == 'X')
-					count++;
-			limit = 1 << count;
-			continue;
+			mask = line.substr(7);
+			limit = 1u << std::count(mask.begin(), mask.end(), 'X');
 		}
-
-		uint64_t position, value;
-		sscanf_s(line, "mem[%llu] = %llu", &position, &value);
-
-		for (unsigned x = 0; x < limit; x++)
+		else if (strncmp(line.c_str(), "mem", 3) == 0)
 		{
-			unsigned bit = 1;
-			for (int i = 0; i < D; i++)
+			uint64_t position, value;
+			sscanf_s(line.c_str(), "mem[%llu] = %llu", &position, &value);
+
+			for (unsigned x = 0; x < limit; x++)
 			{
-				switch (mask[D - i - 1])
+				unsigned bit = 1;
+				for (int i = 0; i < mask.size(); i++)
 				{
-				case 'X':
-					if ((x & bit) == bit)
-						set_bit(position, i);
-					else
-						clear_bit(position, i);
+					switch (mask[mask.size() - i - 1])
+					{
+					case 'X':
+						if ((x & bit) == bit)
+							setb(position, i);
+						else
+							clrb(position, i);
 
-					bit <<= 1;
-					break;
+						bit <<= 1;
+						break;
 
-				case '1':
-					set_bit(position, i);
-					break;
+					case '1':
+						setb(position, i);
+						break;
 
-				default:
-					break;
+					default:
+						break;
+					}
 				}
+				memory[position] = value;
 			}
-			memory[position] = value;
 		}
 	}
 
 	uint64_t sum = 0;
 
-	for (const auto& pos_value_pair : memory)
-		sum += pos_value_pair.second;
-
-	printf("%llu", sum);
+	for (const auto& [_, value] : memory)
+		sum += value;
+	
+	std::cout << sum;
 
 	return 0;
 }

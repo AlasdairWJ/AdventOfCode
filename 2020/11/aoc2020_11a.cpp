@@ -1,76 +1,80 @@
-#include <cstdio>
-#include <utility>
+#include <iostream>
+#include <string>
+#include <vector>
+#include <algorithm> // std::count
 
-#define COLUMNS 90
-#define ROWS 91
+using Board = std::vector<std::string>;
 
-using buffer_type = char[ROWS][COLUMNS + 1];
-
-int neighbours(const buffer_type& board, const int target_row, const int target_column)
+const int deltas[][2]
 {
-	const int row_min = target_row > 0 ? target_row - 1 : target_row;
-	const int row_max = target_row < ROWS-1 ? target_row + 1 : target_row;
-	const int column_min = target_column > 0 ? target_column - 1 : target_column;
-	const int column_max = target_column < COLUMNS-1 ? target_column + 1 : target_column;
-
-	int n = 0;
-	for (int row = row_min; row <= row_max; row++)
-		for (int column = column_min; column <= column_max; column++)
-			if (row != target_row || column != target_column)
-				if (board[row][column] == '#')
-					n++;
-
-	return n;
-}
-
-bool update(const buffer_type& current, buffer_type& next)
-{
-	bool updates = false;
-	for (int row = 0; row < ROWS; row++)
-		for (int column = 0; column < COLUMNS; column++)
-		{
-			const char seat = current[row][column];
-			const int n = neighbours(current, row, column);
-
-			if (seat == 'L' && n == 0)
-			{
-				next[row][column] = '#';
-				updates = true;
-			}
-			else if (seat == '#' && n >= 4)
-			{
-				next[row][column] = 'L';
-				updates = true;
-			}
-			else
-			{
-				next[row][column] = seat;
-			}
-		}
-
-	return updates;
-}
-
-buffer_type buf1, buf2;
+	{ -1,  0 },
+	{ -1,  1 },
+	{  0,  1 },
+	{  1,  1 },
+	{  1,  0 },
+	{  1, -1 },
+	{  0, -1 },
+	{ -1, -1 },
+};
 
 int main(int argc, const char* argv[])
 {
-	board_type *current = &buf1, *next = &buf2;
+	Board board;
 
-	int input_row = 0;
-	while (input_row < ROWS && scanf_s("%s\n", (*current)[input_row], COLUMNS + 1) == 1)
-		input_row++;
+	std::string row;
+	while (std::getline(std::cin, row))
+		board.push_back(row);
 
-	while (update(*current, *next))
-		std::swap(current, next);
+	const int max_y = board.size() - 1;
+	const int max_x = board[0].size() - 1;
+ 
+	Board next = board;
 
+	bool any_updates;
+
+	do
+	{
+		any_updates = false;	
+		for (int y = 0; y <= max_y; y++)
+		{
+			for (int x = 0; x <= max_x; x++)
+			{
+				int n = 0;
+				for (const auto& delta : deltas)
+				{
+					const int x2 = x + delta[0], y2 = y + delta[1];
+					if (x2 >= 0 && x2 <= max_x && y2 >= 0 && y2 <= max_y)
+						if (board[y2][x2] == '#')
+							n++;
+				}
+
+				const char seat = board[y][x];
+				if (seat == 'L' && n == 0)
+				{
+					next[y][x] = '#';
+					any_updates = true;
+				}
+				else if (seat == '#' && n >= 4)
+				{
+					next[y][x] = 'L';
+					any_updates = true;
+				}
+				else
+				{
+					next[y][x] = seat;
+				}
+			}
+		}
+
+		board.swap(next);
+	}
+	while (any_updates);
+	
 	int seated_count = 0;
-	for (int row = 0; row < ROWS; row++)
-		for (int column = 0; column < COLUMNS; column++)
-			if ((*next)[row][column] == '#')
-				seated_count++;
+	for (const auto& row : board)
+		seated_count += std::count(row.begin(), row.end(), '#');
 
-	printf("%d", seated_count);
+	std::cout << seated_count;
 
 	return 0;
 }

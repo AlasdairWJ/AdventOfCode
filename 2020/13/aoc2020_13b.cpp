@@ -1,23 +1,27 @@
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <iostream>
+#include <string>
 
 int main(int argc, const char* argv[])
 {
-	scanf_s("%*d\n");
+	int minutes;
+	std::cin >> minutes;
 
-	__int64 a = 0, x;
+	__int64 a = 0, x = -1;
 	
 	int n = 0;
-	char bus[32];
-	while (scanf_s("%[^,],", bus, (unsigned)_countof(bus)) == 1)
+	
+	do
 	{
-		if (strcmp(bus, "x") != 0)
+		if (std::cin.peek() == 'x')
+		{
+			std::cin.ignore(1);
+		}
+		else
 		{
 			int bus_id;
-			sscanf_s(bus, "%d", &bus_id);
+			std::cin >> bus_id;
 
-			if (n == 0)
+			if (x < 0)
 			{
 				x = bus_id;
 			}
@@ -32,8 +36,9 @@ int main(int argc, const char* argv[])
 
 		n++;
 	}
+	while (std::cin.get() == ',');
 
-	printf("%lld", a);
+	std::cout << a;
 
 	return 0;
 }
