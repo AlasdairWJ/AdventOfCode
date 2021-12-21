@@ -1,24 +1,26 @@
-#include <cstdio>
+#include <iostream>
 #include <map>
 
-#define N 2020
+constexpr int N = 2020;
 
-int main(int argc, char const *argv[])
+int main(int argc, const char* argv[])
 {
 	std::map<int, int> last_indices;
 
-	int n = 0;
-
-	int value;
-	while (scanf_s("%d,", &value) == 1)
+	int n = 0, value;
+	do
+	{
+		std::cin >> value;
 		last_indices[value] = n++;
+	}
+	while (std::cin.get() == ',');
 
 	for (; n < N; n++)
 	{
-		auto it = last_indices.find(value);
+		const auto it = last_indices.find(value);
 		if (it == last_indices.end())
 		{
-			last_indices[value] = n - 1;
+			last_indices.emplace(value, n - 1);
 			value = 0;
 		}
 		else
@@ -27,8 +29,8 @@ int main(int argc, char const *argv[])
 			it->second = n - 1;
 		}
 	}
-	
-	printf("%d", value);
+
+	std::cout << value;
 
 	return 0;
 }

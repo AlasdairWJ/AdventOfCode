@@ -1,33 +1,36 @@
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
+#include <iostream>
 
 int main(int argc, const char* argv[])
 {
 	int minutes;
-	scanf_s("%d\n", &minutes);
+	std::cin >> minutes;
 
 	int best_wait_time = minutes;
 	int best_product = 1;
 
-	char bus[32];
-	while (scanf_s("%[^,],", bus, (unsigned)_countof(bus)) == 1)
+	do
 	{
-		if (strcmp(bus, "x") == 0)
-			continue;
-
-		int bus_minutes;
-		sscanf_s(bus, "%d", &bus_minutes);
-
-		const int wait_time = bus_minutes - minutes % bus_minutes;
-		if (wait_time < best_wait_time)
+		if (std::cin.peek() == 'x')
 		{
-			best_wait_time = wait_time;
-			best_product = wait_time * bus_minutes;
+			std::cin.ignore(1);
 		}
-	}
+		else
+		{
+			int bus_id;
+			std::cin >> bus_id;
 
-	printf("%d", best_product);
+			const int wait_time = bus_id - minutes % bus_id;
+			if (wait_time < best_wait_time)
+			{
+				best_wait_time = wait_time;
+				best_product = wait_time * bus_id;
+			}
+		}
+
+	}
+	while (std::cin.get() == ',');
+
+	std::cout << best_product;
 
 	return 0;
 }
