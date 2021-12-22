@@ -1,56 +1,81 @@
-#include <cstdio>
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <vector>
 
-#define N 20
+template <typename T> T& clrb(T& mask, const int bit) { return mask &= ~(T(1) << bit); }
+template <typename T> T& setb(T& mask, const int bit) { return mask |= T(1) << bit; }
+template <typename T> bool hasb(T& mask, const int bit) { return (mask & (T(1) << bit)) != 0; }
 
-struct range_t
+int fsb(const unsigned x)
 {
-	int m_lower, m_upper;
+	int c = 0;
+	unsigned b = 1;
+	while ((x & b) == 0)
+	{
+		c++;
+		b <<= 1;
+	}
+	return c;
+}
+
+bool is_power_of_2(const unsigned x) { return (x != 0) && (x & (x - 1)) == 0; }
+
+struct Range
+{
+	int lower, upper;
 
 	bool operator()(const int x) const
 	{
-		return m_lower <= x && x <= m_upper;
+		return lower <= x && x <= upper;
 	}
 };
 
-void read_ticket(const char* line, int (&ticket)[N])
+using RangePair = std::pair<Range, Range>;
+
+void read_ticket(const std::string& line, std::vector<int>& ticket)
 {
-	int offset = 0, n;
-	for (int i = 0; i < N; i++)
+	std::stringstream ss(line);
+
+	for (int& value : ticket)
 	{
-		sscanf_s(line + offset, "%d%n", &ticket[i], &n);
-		offset += n + 1;
+		ss >> value;
+		ss.ignore(1);
 	}
 }
 
 int main(int argc, const char* argv[])
 {
-	range_t valid_ranges[N][2];
-	for (int i = 0; i < N; i++)
+	std::vector<RangePair> valid_ranges;
+
+	std::string line;
+	while (std::getline(std::cin, line) && !line.empty())
 	{
-		scanf_s("%*[^:]: %d-%d or %d-%d\n",
-			&valid_ranges[i][0].m_lower, &valid_ranges[i][0].m_upper,
-			&valid_ranges[i][1].m_lower, &valid_ranges[i][1].m_upper);
+		RangePair ranges;
+		sscanf_s(line.c_str(),
+			"%*[^:]: %d-%d or %d-%d\n",
+			&ranges.first.lower, &ranges.first.upper,
+			&ranges.second.lower, &ranges.second.upper);
+
+		valid_ranges.push_back(ranges);
 	}
 
-	char line[128];
-	gets_s(line); // "your ticket:"
-	
-	gets_s(line);
-	int my_ticket[N];
+	const int num_fields = valid_ranges.size();
+
+	std::getline(std::cin, line); // "your ticket:"
+	std::getline(std::cin, line); // my ticket values
+
+	std::vector<int> my_ticket(num_fields);
 	read_ticket(line, my_ticket);
 
-	gets_s(line); // skip empty line
+	std::getline(std::cin, line); // skip empty line
+	std::getline(std::cin, line); // "nearby tickets:"
 
-	gets_s(line); // "nearby tickets:"
+	std::vector<unsigned> options(num_fields, (1u << num_fields) - 1);
 
-	bool all_options[N][N];
-	for (auto& options : all_options)
-		for (bool& b : options)
-			b = true;
-
-	while (gets_s(line) && line[0] != '\0')
+	while (std::getline(std::cin, line) && !line.empty())
 	{
-		int ticket[N];
+		std::vector<int> ticket(num_fields);
 		read_ticket(line, ticket);
 
 		bool is_ticket_valid = true;
@@ -60,7 +85,7 @@ int main(int argc, const char* argv[])
 			bool is_field_valid = false;
 
 			for (const auto& ranges : valid_ranges)
-				if (ranges[0](field_value) || ranges[1](field_value))
+				if (ranges.first(field_value) || ranges.second(field_value))
 				{
 					is_field_valid = true;
 					break;
@@ -76,62 +101,42 @@ int main(int argc, const char* argv[])
 		if (!is_ticket_valid)
 			continue;
 
-		for (int field_pos = 0; field_pos < N; field_pos++)
+		for (int field_pos = 0; field_pos < num_fields; field_pos++)
 		{
 			const int& value = ticket[field_pos];
-			for (int field_id = 0; field_id < N; field_id++)
+			for (int field_id = 0; field_id < num_fields; field_id++)
 			{
 				const auto& ranges = valid_ranges[field_id];
-				if (!ranges[0](value) && !ranges[1](value))
-					all_options[field_id][field_pos] = false;
+				if (!ranges.first(value) && !ranges.second(value))
+					clrb(options[field_pos], field_id);
 			}
 		}
 	}
 
-	int option_count[N] = {};
-
-	for (int field_pos = 0; field_pos < N; field_pos++)
-		for (int field_id = 0; field_id < N; field_id++)
-			if (all_options[field_id][field_pos])
-				option_count[field_pos]++;
-
-	int id_to_pos_map[N];
-
-	for (int i = 0; i < N; i++)
+	std::vector<int> id_to_pos_map(num_fields);
+	for (int i = 0; i < num_fields; i++)
 	{
-		int solved_pos = -1;
-		for (int pos = 0; pos < N; pos++)
-			if (option_count[pos] == 1)
+		int solved_pos;
+		for (int field_pos = 0; field_pos < num_fields; field_pos++)
+			if (is_power_of_2(options[field_pos]))
 			{
-				solved_pos = pos;
+				solved_pos = field_pos;
 				break;
 			}
 
-		int solved_id = -1;
-		for (int id = 0; id < N; id++)
-			if (all_options[id][solved_pos])
-			{
-				solved_id = id;
-				break;
-			}
+		const int solved_id = fsb(options[solved_pos]);
 
 		id_to_pos_map[solved_id] = solved_pos;
 
-		for (int pos = 0; pos < N; pos++)
-			if (all_options[solved_id][pos])
-			{
-				all_options[solved_id][pos] = false;
-				option_count[pos]--;
-			}
-		
+		for (int pos = 0; pos < num_fields; pos++)
+			clrb(options[pos], solved_id);
 	}
 
 	__int64 product = 1;
 	for (int i = 0; i < 6; i++)
 		product *= my_ticket[id_to_pos_map[i]];
 
-	printf("%lld", product);
+	std::cout << product;
 
 	return 0;
-
 }

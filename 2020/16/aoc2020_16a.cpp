@@ -1,48 +1,60 @@
-#include <cstdio>
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <vector>
 
-#define N 20
-
-struct range_t
+struct Range
 {
-	int m_lower, m_upper;
+	int lower, upper;
 
 	bool operator()(const int x) const
 	{
-		return m_lower <= x && x <= m_upper;
+		return lower <= x && x <= upper;
 	}
 };
 
-void read_ticket(const char* line, int (&ticket)[N])
+using RangePair = std::pair<Range, Range>;
+
+void read_ticket(const std::string& line, std::vector<int>& ticket)
 {
-	int offset = 0, n;
-	for (int i = 0; i < N; i++)
+	std::stringstream ss(line);
+
+	for (int& value : ticket)
 	{
-		sscanf_s(line + offset, "%d%n", &ticket[i], &n);
-		offset += n + 1;
+		ss >> value;
+		ss.ignore(1);
 	}
 }
 
 int main(int argc, const char* argv[])
 {
-	range_t valid_ranges[N][2];
-	for (int i = 0; i < N; i++)
+	std::vector<RangePair> valid_ranges;
+	
+	std::string line;
+	while (std::getline(std::cin, line) && !line.empty())
 	{
-		scanf_s("%*[^:]: %d-%d or %d-%d\n",
-			&valid_ranges[i][0].m_lower, &valid_ranges[i][0].m_upper,
-			&valid_ranges[i][1].m_lower, &valid_ranges[i][1].m_upper);
+		RangePair ranges;
+		sscanf_s(line.c_str(),
+			"%*[^:]: %d-%d or %d-%d\n",
+			&ranges.first.lower, &ranges.first.upper,
+			&ranges.second.lower, &ranges.second.upper);
+
+		valid_ranges.push_back(ranges);
 	}
 
-	char line[128];
-	gets_s(line); // "your ticket:"
-	gets_s(line); // my ticket values
-	gets_s(line); // empty
-	gets_s(line); // "nearby tickets:"
+	const int num_fields = valid_ranges.size();
+
+	std::getline(std::cin, line); // "your ticket:"
+	std::getline(std::cin, line); // my ticket values
+	std::getline(std::cin, line); // empty
+	std::getline(std::cin, line); // "nearby tickets:"
 
 	int error_rate = 0;
 
-	while (gets_s(line) && line[0] != '\0')
+	int k = 0;
+	while (std::getline(std::cin, line) && !line.empty())
 	{
-		int ticket[N];
+		std::vector<int> ticket(num_fields);
 		read_ticket(line, ticket);
 
 		bool is_ticket_valid = true;
@@ -52,7 +64,7 @@ int main(int argc, const char* argv[])
 			bool is_field_valid = false;
 
 			for (const auto& ranges : valid_ranges)
-				if (ranges[0](field_value) || ranges[1](field_value))
+				if (ranges.first(field_value) || ranges.second(field_value))
 				{
 					is_field_valid = true;
 					break;
@@ -67,7 +79,7 @@ int main(int argc, const char* argv[])
 		}
 	}
 	
-	printf("%d", error_rate);
+	std::cout << error_rate;
 
 	return 0;
 }
