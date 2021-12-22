@@ -1,100 +1,95 @@
-#include <cstdio>
 #include <iostream>
-#include <cctype>
 #include <string>
+#include <sstream>
 #include <stack>
-#include <list>
+#include <vector>
+#include <variant>
 
-struct token_t
-{
-	enum { LEFT_PAREN, RIGHT_PAREN, NUMBER, OPERATOR } m_type;
-	union { char m_symbol; __int64 m_value; };
-};
+enum TokenType { LEFT_PAREN, RIGHT_PAREN, NUMBER, OPERATOR };
 
-bool tokenise(const std::string& line, std::list<token_t>& output)
+using TokenValue = std::variant<char, __int64>;
+using Token = std::pair<TokenType, TokenValue>;
+using TokenList = std::vector<Token>;
+
+bool tokenise(const std::string& line, TokenList& output)
 {
-	for (int i = 0; i < line.size();)
+	std::stringstream ss(line);
+
+	bool expecting_value = true;
+	while (ss.peek() != EOF)
 	{
-		if (isspace(line[i]))
+		if (expecting_value)
 		{
-			i++;
-			continue;
-		}
+			if (ss.peek() == '(')
+			{
+				ss.ignore(1);
+				output.emplace_back(LEFT_PAREN, '(');
+			}
+			else
+			{
+				__int64 value;
+				ss >> value;
+				output.emplace_back(NUMBER, value);
 
-		token_t token;
+				expecting_value = false;
+			}
 
-		int numeric_value, n;
-		if (sscanf_s(&line[i], "%d%n", &numeric_value, &n) == 1)
-		{
-			token.m_type = token_t::NUMBER;
-			token.m_value = numeric_value;
-
-			i += n;
 		}
 		else
 		{
-			switch (line[i])
+			if (ss.peek() == ')')
 			{
-			case '+':
-			case '*':
-				token.m_type = token_t::OPERATOR;
-				token.m_symbol = line[i++];
-				break;
+				ss.ignore(1);
+				output.emplace_back(RIGHT_PAREN, ')');
+			}
+			else
+			{
+				ss.ignore(1);
+				output.emplace_back(OPERATOR, static_cast<char>(ss.get()));
+				ss.ignore(1);
 
-			case '(':
-				token.m_type = token_t::LEFT_PAREN;
-				token.m_symbol = line[i++];
-				break;
-
-			case ')':
-				token.m_type = token_t::RIGHT_PAREN;
-				token.m_symbol = line[i++];
-				break;
-
-			default:
-				return false;
+				expecting_value = true;
 			}
 		}
-
-		output.push_back(token);
 	}
 
 	return true;
 }
 
-bool simple_shunting_yard(std::list<token_t>& tokens, std::list<token_t>& output)
+bool shunting_yard(const TokenList& infix_tokens,
+						  TokenList& postfix_tokens)
 {
-	std::stack<token_t> stack;
+	std::stack<Token> stack;
 
-	for (const auto& token : tokens)
+	for (const auto& token : infix_tokens)
 	{
-		switch (token.m_type)
+		switch (token.first)
 		{
-		case token_t::NUMBER:
-			output.push_back(token);
+		case NUMBER:
+			postfix_tokens.push_back(token);
 			break;
 
-		case token_t::OPERATOR:
-			while (!stack.empty() && stack.top().m_type == token_t::OPERATOR)
+		case OPERATOR:
+			while (!stack.empty() && stack.top().first == OPERATOR)
 			{
-				output.push_back(stack.top());
+				postfix_tokens.push_back(stack.top());
 				stack.pop();
 			}
 			stack.push(token);
 			break;
 
-		case token_t::LEFT_PAREN:
+		case LEFT_PAREN:
 			stack.push(token);
 			break;
 
-		case token_t::RIGHT_PAREN:
-			while (!stack.empty() && stack.top().m_type == token_t::OPERATOR)
+		case RIGHT_PAREN:
+			while (!stack.empty() && stack.top().first == OPERATOR)
 			{
-				output.push_back(stack.top());
+				postfix_tokens.push_back(stack.top());
 				stack.pop();
 			}
 
-			if (!stack.empty() && stack.top().m_type == token_t::LEFT_PAREN)
+			if (!stack.empty() && stack.top().first == LEFT_PAREN)
 			{
 				stack.pop();
 			}
@@ -104,65 +99,65 @@ bool simple_shunting_yard(std::list<token_t>& tokens, std::list<token_t>& output
 
 	while (!stack.empty())
 	{
-		output.push_back(stack.top());
+		postfix_tokens.push_back(stack.top());
 		stack.pop();
 	}
 
 	return true;
 }
 
-void print_tokens(const std::list<token_t>& tokens)
+void print_tokens(const TokenList& tokens)
 {
-	for (const auto& token : tokens)
+	for (const auto& [op, value] : tokens)
 	{
-		switch (token.m_type)
+		switch (op)
 		{
-		case token_t::OPERATOR:
-		case token_t::LEFT_PAREN:
-		case token_t::RIGHT_PAREN:
-			printf("%c ", token.m_symbol);
+		case OPERATOR:
+		case LEFT_PAREN:
+		case RIGHT_PAREN:
+			std::cout << std::get<char>(value);
 			break;
-		case token_t::NUMBER:
-			printf("%lld ", token.m_value);
+		case NUMBER:
+			std::cout << std::get<__int64>(value);
+			break;
+		default:
 			break;
 		}
+		std::cout << ' ';
 	}
-	putchar('\n');
+	std::cout << '.' << std::endl;
 }
 
-__int64 operate(const char op, const __int64 a, const __int64 b)
+__int64 operate(const char op_symbol, const __int64 a, const __int64 b)
 {
-	switch (op)
+	switch (op_symbol)
 	{
 	case '+': return a + b;
 	case '*': return a * b;
+	default: return 0;
 	}
-	return 0;
 }
 
-__int64 evaluate(std::list<token_t> postfix_tokens)
+__int64 evaluate(TokenList postfix_tokens)
 {
-	auto it = postfix_tokens.begin();
-	while (it != postfix_tokens.end())
+	for (auto it = postfix_tokens.begin(); it != postfix_tokens.end(); ++it)
 	{
-		if (it->m_type == token_t::OPERATOR)
+		if (it->first == OPERATOR)
 		{
-			const char op = it->m_symbol;
+			const char op = std::get<char>(it->second);
 			it--;
-			const __int64 b = it->m_value;
+			const __int64 b = std::get<__int64>(it->second);
 			it--;
-			const __int64 a = it->m_value;
+			const __int64 a = std::get<__int64>(it->second);
 
-			it = postfix_tokens.erase(it);
-			it = postfix_tokens.erase(it);
+			it = postfix_tokens.erase(it, it + 2);
 
-			it->m_type = token_t::NUMBER;
-			it->m_value = operate(op, a, b);
+			it->first = NUMBER;
+			it->second = operate(op, a, b);
 		}
-		it++;
 	}
 
-	return postfix_tokens.front().m_value;
+	return std::get<__int64>(postfix_tokens.front().second);
 }
 
 int main(int argc, const char* argv[])
@@ -172,18 +167,18 @@ int main(int argc, const char* argv[])
 	std::string line;
 	while (std::getline(std::cin, line))
 	{
-		std::list<token_t> tokens;
-		tokenise(line, tokens);
+		TokenList infix_tokens;
+		tokenise(line, infix_tokens);
 
-		std::list<token_t> postfix_tokens;
-		simple_shunting_yard(tokens, postfix_tokens);
+		TokenList postfix_tokens;
+		shunting_yard(infix_tokens, postfix_tokens);
 
 		const __int64 result = evaluate(postfix_tokens);
 
 		sum += result;
 	}
 
-	printf("%lld", sum);
+	std::cout << sum;
 
 	return 0;
 }
