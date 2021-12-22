@@ -1,120 +1,128 @@
-#include <cstdio>
 #include <iostream>
+#include <sstream>
 #include <string>
+#include <vector>
 #include <map>
-#include <set>
 
-struct rule_t
+struct RuleList
 {
-	int m_rule_id;
+	int count() const { return m_count; }
 
-	bool m_is_letter;
-	char m_letter;
+	const auto* begin() const { return m_rules; }
+	const auto* end() const { return m_rules + m_count; }
 
-	struct {
-		int m_subrule_count;
-		int m_subrules[2];
-	} m_options[2];
+	void add(int rule_id)
+	{
+		m_rules[m_count++] = rule_id;
+	}
+
+private:
+	int m_count;
+	int m_rules[2];
 };
 
-std::map<int, rule_t> rules_map;
-
-// this was not how i wanted this to go
-
-bool matches_rule(const std::string& line, const int rule_id, const int position, std::set<int>& final_positions)
+struct Options
 {
-	if (position >= line.size())
-		return false;
+	Options() = default;
 
-	const rule_t& rule = rules_map.find(rule_id)->second;
+	const auto* begin() const { return m_options; }
+	const auto* end() const { return m_options + m_count; }
 
-	if (rule.m_is_letter)
+	RuleList& add() { return m_options[m_count++]; }
+
+private:
+	int m_count;
+	RuleList m_options[2];
+};
+
+struct Rule
+{
+	Rule() = default;
+
+	bool is_letter() const { return m_is_letter; }
+
+	bool is_letter_match(const char letter) const { return m_letter == letter; }
+
+	void set_letter(const char letter)
 	{
-		if (rule.m_letter != line[position])
-			return false;
+		m_letter = letter;
+		m_is_letter = true;
+	}
 
-		final_positions.insert(position + 1);
-		return true;
+	Options& options() { return m_options; }
+	const Options& options() const { return m_options; }
+
+private:
+	Options m_options;
+	bool m_is_letter;
+	char m_letter;
+};
+
+using iterator = std::string::iterator;
+using Result = std::pair<bool, iterator>;
+
+std::map<int, Rule> all_rules;
+
+Result matches(const iterator& begin, const iterator& end, std::vector<int>& rules, int offset = 0)
+{
+	if (const bool a = offset == rules.size(); a || begin == end)
+		return { a, begin };
+
+	const int rule_id = rules[offset++];
+	auto& rule = all_rules[rule_id];
+
+	if (rule.is_letter())
+	{
+		return rule.is_letter_match(*begin) ?
+			   matches(begin + 1, end, rules, offset) : 
+			   std::make_pair(false, begin);
 	}
 
 	if (rule_id == 8)
 	{
-		std::set<int> current_positions;
-		matches_rule(line, 42, position, current_positions);
-
-		while (!current_positions.empty())
+		Result result = { false, begin };
+		while (result = matches(result.second, end, std::vector<int>{ 42 }), result.first)
 		{
-			final_positions.insert(current_positions.begin(), current_positions.end());
-
-			std::set<int> next_positions;
-			for (const int current_position : current_positions)
-				matches_rule(line, 42, current_position, next_positions);
-			current_positions.swap(next_positions);
+			const auto full_result = matches(result.second, end, rules, offset);
+			if (full_result.first)
+				return full_result;
 		}
 
-		return !final_positions.empty();
+		return { false, begin };
 	}
 
 	if (rule_id == 11)
 	{
-		std::set<int> current_positions;
-		matches_rule(line, 42, position, current_positions);
-
-		int count = 1;
-
-		while (!current_positions.empty())
+		std::vector<int> new_rules_31;
+		Result result = { false, begin };
+		while (result = matches(result.second, end, std::vector<int>{ 42 }), result.first)
 		{
-			auto reverse_positions = current_positions;
-			for (int i = 0; i < count; i++)
+			new_rules_31.push_back(31);
+			Result full_result = matches(result.second, end, new_rules_31);
+			if (full_result.first)
 			{
-				std::set<int> next_positions;
-				for (const int reverse_position : reverse_positions)
-					matches_rule(line, 31, reverse_position, next_positions);
-				reverse_positions.swap(next_positions);
+				full_result = matches(full_result.second, end, rules, offset);
+				if (full_result.first)
+					return full_result;
 			}
-
-			final_positions.insert(reverse_positions.begin(), reverse_positions.end());
-
-			std::set<int> next_positions;
-			for (const int current_position : current_positions)
-				matches_rule(line, 42, current_position, next_positions);
-			current_positions.swap(next_positions);
-
-			count++;
 		}
 
-		return !final_positions.empty();
+		return { false, begin };
 	}
 
-	for (int j = 0; j < 2; j++)
+	for (const auto& rule_list : rule.options())
 	{
-		if (rule.m_options[j].m_subrule_count == 0)
-			continue;
+		rules.insert(rules.begin() + offset, rule_list.begin(), rule_list.end());
 
-		std::set<int> current_positions = { position };
-		for (int i = 0; i < rule.m_options[j].m_subrule_count; i++)
-		{
-			std::set<int> next_positions;
-			for (const int current_position : current_positions)
-				matches_rule(line, rule.m_options[j].m_subrules[i], current_position, next_positions);
-			next_positions.swap(current_positions);
-		}
+		const auto result = matches(begin, end, rules, offset);
+		if (result.first)
+			return result;
 
-		final_positions.insert(current_positions.begin(), current_positions.end());
+		const auto it = rules.begin() + offset;
+		rules.erase(it, it + rule_list.count());
 	}
 
-	return !final_positions.empty();
-}
-
-int read_list(const std::string& line, int& position, int* values)
-{
-	int i = 0, n;
-	while (position < line.size() && sscanf_s(&line[position], "%d%n", &values[i], &n) == 1)
-	{
-		position += n + 1;
-		i++;
-	}
-	return i;
+	return { false, begin };
 }
 
 int main(int argc, const char* argv[])
@@ -122,37 +130,55 @@ int main(int argc, const char* argv[])
 	std::string line;
 	while (std::getline(std::cin, line) && !line.empty())
 	{
+		std::stringstream ss(line);
+
 		int rule_id;
+		ss >> rule_id;
 
-		int offset;
-		sscanf_s(line.c_str(), "%d: %n", &rule_id, &offset);
+		ss.ignore(2); // ": "
 
-		rule_t& rule = rules_map[rule_id]; // let this do the construction for us
-		rule.m_rule_id = rule_id;
+		Rule& rule = all_rules[rule_id]; // let this do the construction for us
 
-		if (line[offset] == '"')
+		if (ss.peek() == '"')
 		{
-			rule.m_is_letter = true;
-			rule.m_letter = line[offset+1];
+			ss.ignore(1); // '"'
+
+			char letter;
+			ss >> letter;
+			rule.set_letter(letter);
+
+			ss.ignore(1); // '"'
 		}
 		else
 		{
-			rule.m_options[0].m_subrule_count = read_list(line, offset, rule.m_options[0].m_subrules);
-			if (offset < line.size() && line[offset] == '|')
-				rule.m_options[1].m_subrule_count = read_list(line, ++offset, rule.m_options[1].m_subrules);
+			auto& options = rule.options();
+
+			do
+			{
+				auto& sub_rules = options.add();
+
+				int sub_rule_id;
+				while (!ss.eof() && ss.peek() != '|')
+				{
+					ss >> sub_rule_id;
+					sub_rules.add(sub_rule_id);
+
+					ss.ignore(1); // ' '
+				}
+			}
+			while (!ss.eof() && ss.ignore(1));
 		}
 	}
 
 	int count = 0;
 	while (std::getline(std::cin, line))
 	{
-		std::set<int> final_positions;
-		if (matches_rule(line, 0, 0, final_positions))
-			if (final_positions.find(line.size()) != final_positions.end())
-				count++;
+		const auto [success, end] = matches(line.begin(), line.end(), std::vector<int>{ 0 });
+		if (success && end == line.end())
+			count++;
 	}
 
-	printf("%d", count);
+	std::cout << count;
 
 	return 0;
 }
