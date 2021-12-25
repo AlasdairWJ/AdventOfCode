@@ -1,10 +1,10 @@
-#include <cstdio>
-#include <cstdlib>
 #include <iostream>
-#include <set>
 #include <string>
+#include <sstream>
+#include <set>
 #include <map>
 #include <vector>
+#include <algorithm>
 
 int next_ingredient_id = 0;
 std::vector<std::string> ingredient_names;
@@ -14,98 +14,88 @@ int next_allergen_id = 0;
 std::vector<std::string> allergen_names;
 std::map<std::string, int> allergen_id_map;
 
-struct food_t
+struct Food
 {
-	std::set<int> m_ingredients;
-	std::set<int> m_allergens;
+	void add_ingredient(const int id)
+	{
+		m_ingredients.insert(id);
+	}
 
-	bool contains_allergen(int id) const
+	bool contains_ingredient(const int id) const
+	{
+		return m_ingredients.find(id) != m_ingredients.end();
+	}
+
+	void add_allergen(const int id)
+	{
+		m_allergens.insert(id);
+	}
+
+	bool contains_allergen(const int id) const
 	{
 		return m_allergens.find(id) != m_allergens.end();
 	}
 
-	bool contains_ingredient(int id) const
-	{
-		return m_ingredients.find(id) != m_ingredients.end();
-	}
-};
+	auto ingredients() const { return m_ingredients; }
 
-void intersect_with(std::set<int>& A, const std::set<int>& B)
-{
-	auto it = A.begin();
-	while (it != A.end())
-	{
-		if (B.find(*it) == B.end())
-			it = A.erase(it);
-		else
-			++it;
-	}
-}
+private:
+	std::set<int> m_ingredients;
+	std::set<int> m_allergens;
+};
 
 int main(int argc, const char* argv[])
 {
-	std::vector<food_t> all_foods;
+	std::vector<Food> all_foods;
 
 	std::string line;
 	while (std::getline(std::cin, line))
 	{
-		food_t food;
+		Food food;
 
-		size_t offset = 0;
-		while (line[offset] != '(')
+		std::stringstream ss(line);
+
+		while (ss.peek() != '(')
 		{
-			const size_t next = line.find_first_of(' ', offset);
+			std::string ingredient;
+			ss >> ingredient;
 
-			const std::string ingredient = line.substr(offset, next - offset);
+			const auto [it, is_new_ingredient] = ingredient_id_map.emplace(ingredient, next_ingredient_id);
 
-			int ingredient_id = next_ingredient_id;
-
-			const auto pair = ingredient_id_map.emplace(ingredient, ingredient_id);
-
-			if (pair.second)
+			if (is_new_ingredient)
 			{
-				// new ingredient
 				ingredient_names.push_back(ingredient);
 				next_ingredient_id++;
 			}
-			else
-			{
-				const auto& it = pair.first;
-				ingredient_id = it->second;
-			}
 
-			food.m_ingredients.insert(ingredient_id);
+			food.add_ingredient(it->second);
 
-			offset = next + 1;
+			ss.ignore(1); // ' '
 		}
 
-		offset += _countof("contains ");
+		std::string ignore;
+		ss >> ignore; // "(contains"
 
-		while (offset < (int)line.size())
+		bool done_reading_allergens = false;
+		while (!done_reading_allergens)
 		{
-			const size_t next = line.find_first_of(",)", offset);
+			std::string allergen;
+			ss >> allergen;
 
-			const std::string allergen = line.substr(offset, next - offset);
+			if (allergen.back() == ')')
+				done_reading_allergens = true;
 
-			int allergen_id = next_allergen_id;
+			allergen.pop_back();
 
-			const auto pair = allergen_id_map.emplace(allergen, allergen_id);
+			const auto [it, is_new_allergen] = allergen_id_map.emplace(allergen, next_allergen_id);
 			
-			if (pair.second)
+			if (is_new_allergen)
 			{
 				// new ingredient
 				allergen_names.push_back(allergen);
 				next_allergen_id++;
 			}
-			else
-			{
-				const auto& it = pair.first;
-				allergen_id = it->second;
-			}
 
-			food.m_allergens.insert(allergen_id);
-
-			offset = next + 2;
+			food.add_allergen(it->second);
 		}
 
 		all_foods.push_back(food);
@@ -122,31 +112,33 @@ int main(int argc, const char* argv[])
 			if (!food.contains_allergen(id))
 				continue;
 
+			const auto& ingredients = food.ingredients();
 			if (possibly_this_allergen.empty())
 			{
-				possibly_this_allergen.insert(food.m_ingredients.begin(), food.m_ingredients.end());
+				possibly_this_allergen.insert(ingredients.begin(), ingredients.end());
 			}
 			else
 			{
-				intersect_with(possibly_this_allergen, food.m_ingredients);
+				for (auto it = possibly_this_allergen.begin(); it != possibly_this_allergen.end();)
+				{
+					if (ingredients.find(*it) == ingredients.end())
+						it = possibly_this_allergen.erase(it);
+					else
+						++it;
+				}
 			}
 		}
-
-		printf("possibly allergen #%d (%s): ", id, allergen_names[id].c_str());
-		for (const int possibly : possibly_this_allergen)
-			printf("%s,", ingredient_names[possibly].c_str());
-		printf("\b \n");
 
 		all_possible_allergens.insert(possibly_this_allergen.begin(), possibly_this_allergen.end());
 	}
 
 	int count = 0;
 	for (const auto& food : all_foods)
-		for (const int ingredient : food.m_ingredients)
+		for (const int ingredient : food.ingredients())
 			if (all_possible_allergens.find(ingredient) == all_possible_allergens.end())
 				count++;
 
-	printf("%d", count);
+	std::cout << count;
 
 	return 0;
 }
