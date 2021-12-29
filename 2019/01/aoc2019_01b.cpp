@@ -1,23 +1,17 @@
-#include <cstdio>
+#include <iostream>
 
 int main(int argc, const char* argv[])
 {
-	int total_fuel = 0;
+	int total = 0;
 
-	int mass;
-	while (scanf_s("%d", &mass) == 1)
+	int value;
+	while (std::cin >> value)
 	{
-		int fuel =  (mass / 3) - 2;
-
-		do
-		{
-			total_fuel += fuel;
-			fuel = (fuel / 3) - 2;
-		}
-		while  (fuel > 0);
+		while (((value /= 3) -= 2) > 0)
+			total += value;
 	}
 
-	printf("%d", total_fuel);
+	std::cout << total;
 
 	return 0;
 }
