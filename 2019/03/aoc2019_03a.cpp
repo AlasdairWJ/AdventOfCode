@@ -1,126 +1,116 @@
-#include <cstdio>
+#include <iostream>
+#include <sstream>
 #include <vector>
 
-void direction_to_delta(const char direction, int& dx, int& dy)
+bool direction_to_delta(const char direction, int& dx, int& dy)
 {
+	dx = 0, dy = 0;
 	switch (direction)
 	{
-	case 'L':
-		dx = -1, dy = 0;
-		break;
-	case 'R':
-		dx = 1, dy = 0;
-		break;
-	case 'U':
-		dx = 0, dy = -1;
-		break;
-	case 'D':
-		dx = 0, dy = 1;
-		break;
+	case 'L': dx = -1; break;
+	case 'R': dx = 1; break;
+	case 'U': dy = -1; break;
+	case 'D': dy = 1; break;
+	default: return false;
 	};
+	return true;
 }
 
-int abs(const int x)
+struct Line
 {
-	return x < 0 ? -x : x;
-}
-
-struct line_t
-{
-	int start_x, start_y;
-	int dx, dy, length;
+	int x, y, dx, dy, length;
 };
 
-bool solve(const int (&A)[2][2], const int (&Y)[2], int (&X)[2])
+struct Point
 {
-	const int det_r = A[0][0] * A[1][1] - A[0][1] * A[1][0];
+	int x, y;
+};
 
-	if (det_r == 0)
+// Ax = b
+bool solve(const int a11, const int a12, const int a21, const int a22,
+		   const int b1, const int b2,
+		   int& x1, int& x2)
+{
+	const int det = a11 * a22 - a12 * a21;
+
+	if (det == 0)
 		return false;
 
-	X[0] = (A[1][1] * Y[0] - A[0][1] * Y[1]) / det_r;
-	X[1] = (A[0][0] * Y[1] - A[1][0] * Y[0]) / det_r;
+	x1 = (a22 * b1 - a12 * b2) / det;
+	x2 = (a11 * b2 - a21 * b1) / det;
 
 	return true;
 }
 
-bool intersect(const line_t& a, const line_t& b, int& u, int& v)
+bool intersects(const Line& a, const Line& b, Point& p)
 {
-	// a.x + u * a.dx = b.x + v * b.x
-	// a.y + u * a.dy = b.y + v * b.y
+	int u, v;
+	if (solve(a.dx, -b.dx, a.dy, -b.dy, b.x - a.x, b.y - a.y, u, v) &&
+		u >= 0 && u <= a.length && v >= 0 && v <= b.length)
+	{
+		p.x = a.x + u * a.dx;
+		p.y = a.y + u * a.dy;
+		return true;
+	}
+	return false;
+}
 
-	// u * a.dx + v * (-b.dx) = (b.x - a.x)
-	// u * a.dy + v * (-b.dy) = (b.y - a.y)
+using Path = std::vector<Line>;
 
-	// [ a.dx -b.dx ] [u] - [b.x - a.x]
-	// [ a.dy -b.dy ] [v] - [b.y - a.y]
+Path read_path()
+{
+	Path path;
 
-	const int A[2][2] = {
-		{ a.dx, -b.dx },
-		{ a.dy, -b.dy },
-	};
+	std::string line;
+	std::getline(std::cin, line);
 
-	const int Y[2] = {
-		b.start_x - a.start_x,
-		b.start_y - a.start_y,
-	};
+	std::stringstream ss(line);
 
-	int X[2];
-	if (!solve(A, Y, X))
-		return false;
+	int x = 0, y = 0;
 
-	u = X[0];
-	v = X[1];
+	char direction;
+	int length;
+	while (ss >> direction, ss >> length)
+	{
+		Line line;
+		line.x = x;
+		line.y = y;
+		line.length = length;
+		direction_to_delta(direction, line.dx, line.dy);
 
-	return true;
+		x += length * line.dx;
+		y += length * line.dy;
+
+		path.push_back(line);
+
+		ss.ignore(1);
+	}
+
+	return path;
 }
 
 int main(int argc, const char* argv[])
 {
-	std::vector<line_t> paths[2];
+	const Path path_a = read_path();
+	const Path path_b = read_path();
 
-	for (auto& path : paths)
+	int min_distance = INT_MAX;
+
+	for (const auto& a : path_a)
 	{
-		int x = 0, y = 0;
-
-		char direction;
-		int length;
-		while (scanf_s("%c%d", &direction, 1u, &length) == 2)
+		for (const auto& b : path_b)
 		{
-			line_t line;
-			line.start_x = x;
-			line.start_y = y;
-			line.length = length;
-			direction_to_delta(direction, line.dx, line.dy);
-
-			x += length * line.dx;
-			y += length * line.dy;
-
-			path.push_back(line);
-
-			if (getchar() == '\n')
-				break;
+			Point p;
+			if (intersects(a, b, p))
+			{
+				const int distance = std::abs(p.x) + std::abs(p.y);
+				if (distance < min_distance)
+					min_distance = distance;
+			}
 		}
 	}
 
-	int min_distance = 100000;
-
-	for (const line_t& a : paths[0])
-	{
-		for (const line_t& b : paths[1])
-		{
-			int u, v;
-			if (intersect(a, b, u, v))
-				if (u > 0 && u <= a.length && v > 0 && v <= b.length)
-				{
-					const int distance = abs(x) + abs(y);
-					if (distance < min_distance)
-						min_distance = distance;
-				}
-		}
-	}
-
-	printf("min distance: %d\n", min_distance);
+	std::cout << min_distance;
 
 	return 0;
 }

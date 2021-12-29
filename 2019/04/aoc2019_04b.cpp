@@ -1,48 +1,55 @@
-#include <cstdio>
+#include <iostream>
+
+constexpr int num_digits = 6;
 
 int main(int argc, const char* argv[])
 {
-	int lower, upper;
-	if (scanf_s("%d-%d", &lower, &upper) != 2)
-		return 1;
+	int lower;
+	std::cin >> lower;
+
+	std::cin.ignore(1); // '-'
+	
+	int upper;
+	std::cin >> upper;
 
 	int count = 0;
 
-	int digits[6];
+	int digits[num_digits];
 	for (int x = lower; x < upper; x++)
 	{
-		for (int d = 0, y = x; d < 6; d++, y /= 10)
+		for (int d = 0, y = x; d < num_digits; d++, y /= 10)
 			digits[d] = y % 10;
 
 		bool is_increasing = true;
-		for (int d = 0; d < 5; d++)
+		for (int d = 0; d < num_digits - 1; d++)
+		{
 			if (digits[d] < digits[d + 1])
 			{
 				is_increasing = false;
 				break;
 			}
+		}
 
 		if (!is_increasing)
 			continue;
 
-		int adjacent_digits = 0;
-		for (int d = 0; d < 5; d++)
-			if (digits[d] == digits[d + 1])
+		bool any_adjacent_digits = false;
+		for (int d = 0; d < num_digits - 1; d++)
+		{
+			if ((digits[d] == digits[d + 1]) &&
+				(d == 0 || digits[d] != digits[d - 1]) &&
+				(d + 2 >= num_digits || digits[d] != digits[d + 2]))
 			{
-				if (d > 0 && digits[d] == digits[d - 1])
-					continue;
-				if (d < 4 && digits[d] == digits[d + 2])
-					continue;
-				adjacent_digits++;
+				any_adjacent_digits = true;
+				break;
 			}
+		}
 
-		if (adjacent_digits == 0)
-			continue;
-
-		count++;
+		if (any_adjacent_digits)
+			count++;
 	}
 
-	printf("%d", count);
+	std::cout << count;
 
 	return 0;
 }

@@ -1,58 +1,27 @@
-#include <cstdio>
-#include <vector>
+#include <iostream>
+#include "intcode.hpp"
 
-int execute(std::vector<int> intcode, int noun, int verb)
-{
-	intcode[1] = noun;
-	intcode[2] = verb;
-
-	int position = 0;
-	while (position < intcode.size())
-	{
-		const int op_code = intcode[position];
-
-		if (op_code == 99)
-			break;
-
-		const int a = intcode[position + 1];
-		const int b = intcode[position + 2];
-		const int c = intcode[position + 3];
-
-		if (op_code == 1)
-		{
-			intcode[c] = intcode[a] + intcode[b];
-		}
-		else if (op_code == 2)
-		{
-			intcode[c] = intcode[a] * intcode[b];
-		}
-		else
-		{
-			// invalid op
-		}
-
-		position += 4;
-	}
-
-	return intcode[0];
-}
+constexpr int target = 19690720;
 
 int main(int argc, const char* argv[])
 {
-	std::vector<int> intcode;
+	Program program;
 
 	int value;
-	while (scanf_s("%d,", &value) == 1)
-		intcode.push_back(value);
+	while (std::cin >> value)
+		program.push_back(value), std::cin.ignore(1);
 
 	for (int noun = 0; noun < 100; noun++)
 	{
+		program[1] = noun;
 		for (int verb = 0; verb < 100; verb++)
 		{
-			const int output = execute(intcode, noun, verb);
-			if (output == 19690720)
+			program[2] = verb;
+
+			const int output = execute(program);
+			if (output == target)
 			{
-				printf("%02d%02d", noun, verb);
+				std::cout << 100 * noun + verb;
 				return 0;
 			}
 		}
