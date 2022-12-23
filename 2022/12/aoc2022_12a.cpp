@@ -76,45 +76,29 @@ int main(int argc, const char* argv[])
 			if (p.x > 0)
 			{
 				const point left { p.x - 1, p.y };
-				bool& v = visited(left);
-				if (!v && at(left) <= c + 1)
-				{
-					next.insert(left);
-					v = true;
-				}
+				if (bool& v = visited(left); !v && at(left) <= c + 1)
+					next.insert(left), v = true;
 			}
 
 			if (p.x < width - 1)
 			{
 				const point right { p.x + 1, p.y };
-				bool& v = visited(right);
-				if (!v && at(right) <= c + 1)
-				{
-					next.insert(right);
-					v = true;
-				}
+				if (bool& v = visited(right); !v && at(right) <= c + 1)
+					next.insert(right), v = true;
 			}
 
 			if (p.y > 0)
 			{
 				const point above { p.x, p.y - 1 };
-				bool& v = visited(above);
-				if (!v && at(above) <= c + 1)
-				{
-					next.insert(above);
-					v = true;
-				}
+				if (bool& v = visited(above); !v && at(above) <= c + 1)
+					next.insert(above), v = true;
 			}
 
 			if (p.y < height - 1)
 			{
 				const point below { p.x, p.y + 1 };
-				bool& v = visited(below);
-				if (!v && at(below) <= c + 1)
-				{
-					next.insert(below);
-					v = true;
-				}
+				if (bool& v = visited(below); !v && at(below) <= c + 1)
+					next.insert(below), v = true;
 			}
 		}
 
