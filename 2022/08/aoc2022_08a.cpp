@@ -1,30 +1,28 @@
-#include <iostream>
-#include <string>
-#include <vector>
-#include <memory>
-#include <numeric>
+#include <iostream> // std::cout
+#include <string> // std::string, std::getline
+#include <vector> // std::vector
+#include <numeric> // std::accumulate
 
 int main(int argc, const char* argv[])
 {
 	std::vector<std::string> heights;
 
-	std::string buffer;
-	while (std::getline(std::cin, buffer))
-		heights.push_back(buffer);
+	std::string line;
+	while (std::getline(std::cin, line))
+		heights.push_back(line);
 
 	const int row_count = heights.size();
 	const int col_count = heights.front().size();
 	const int tree_count = row_count * col_count;
 
-	const auto visible = std::make_unique<bool[]>(tree_count);
+	std::vector<bool> visible(tree_count);
 
 	for (int row = 0; row < row_count; row++)
 	{
 		char max = 0;
 		for (int col = 0; col < col_count; col++)
 		{
-			const char height = heights[row][col];
-			if (height > max)
+			if (const char height = heights[row][col]; height > max)
 			{
 				max = height;
 				visible[row * col_count + col] = true;
@@ -34,8 +32,7 @@ int main(int argc, const char* argv[])
 		max = 0;
 		for (int col = col_count - 1; col >= 0; col--)
 		{
-			const char height = heights[row][col];
-			if (height > max)
+			if (const char height = heights[row][col]; height > max)
 			{
 				max = height;
 				visible[row * col_count + col] = true;
@@ -48,8 +45,7 @@ int main(int argc, const char* argv[])
 		char max = 0;
 		for (int row = 0; row < row_count; row++)
 		{
-			const char height = heights[row][col];
-			if (height > max)
+			if (const char height = heights[row][col]; height > max)
 			{
 				max = height;
 				visible[row * col_count + col] = true;
@@ -59,8 +55,7 @@ int main(int argc, const char* argv[])
 		max = 0;
 		for (int row = row_count - 1; row >= 0; row--)
 		{
-			const char height = heights[row][col];
-			if (height > max)
+			if (const char height = heights[row][col]; height > max)
 			{
 				max = height;
 				visible[row * col_count + col] = true;
@@ -68,7 +63,7 @@ int main(int argc, const char* argv[])
 		}
 	}
 
-	std::cout << std::accumulate(visible.get(), visible.get() + tree_count, 0);
+	std::cout << std::accumulate(visible.begin(), visible.end(), 0);
 
 	return 0;
 }
