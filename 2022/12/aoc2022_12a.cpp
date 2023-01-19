@@ -1,14 +1,14 @@
 #include <iostream> // std::cout
 #include <string> // std::string, std::getline
-#include <vector> //std::vector
-#include <array> //std::array
-#include <set> //std::set
+#include <vector> // std::vector
+#include <utility> // std::pair
+#include <set> // std::set
 
 int main(int argc, const char* argv[])
 {
 	std::vector<std::string> rows;
 
-	using point = std::array<int, 2>;
+	using point = std::pair<int, int>;
 	point start, target;
 
 	std::string line;
@@ -33,19 +33,20 @@ int main(int argc, const char* argv[])
 		}
 
 		rows.push_back(line);
-	} while (std::getline(std::cin, line));
+	}
+	while (std::getline(std::cin, line));
 
 	const int height = rows.size();
 
-	const auto visited = [&](const point& p) -> int&
+	const auto visited = [&](const point& p) -> int8_t&
 	{
-		static std::vector<int> data(width * height);
-		return data.at(p[1] * width + p[0]);
+		static std::vector<int8_t> data(width * height);
+		return data.at(p.second * width + p.first);
 	};
 
 	const auto at = [&](const point& p) -> char
 	{
-		return rows[p[1]][p[0]];
+		return rows[p.second][p.first];
 	};
 
 	visited(start) = true;
@@ -53,8 +54,8 @@ int main(int argc, const char* argv[])
 	int steps = 0;
 
 	for (std::set<point> current{ start };
-		!current.empty() && current.find(target) == current.end();
-		steps++)
+		 !current.empty() && current.find(target) == current.end();
+		 steps++)
 	{
 		std::set<point> next;
 
