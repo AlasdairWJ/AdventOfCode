@@ -1,15 +1,20 @@
 #include <iostream> // std::cout
 #include <string> // std::string, std::getline
-#include <array> // std::array
+#include <utility> // std::pair
 #include <set> // std::set
 #include <cmath> // std::abs
 
 int main(int argc, const char* argv[])
 {
-	using point = std::array<int, 2>;
+	using point = std::pair<int, int>;
 
 	point knots[10] = {};
-	point &head = knots[0], &tail = knots[9];
+
+	point& head = knots[0];
+	auto& [head_x, head_y] = head;
+
+	const point& tail = knots[9];
+	const auto& [tail_x, tail_y] = tail;
 
 	std::set<point> locations { tail };
 
@@ -25,34 +30,38 @@ int main(int argc, const char* argv[])
 			switch (direction)
 			{
 			case 'L':
-				head[0]--;
+				head_x--;
 				break;
 			case 'R':
-				head[0]++;
+				head_x++;
 				break;
 			case 'U':
-				head[1]--;
+				head_y--;
 				break;
 			case 'D':
-				head[1]++;
+				head_y++;
 				break;
 			}
 
 			for (int i = 1; i < 10; i++)
 			{
-				point& knot = knots[i];
-				const int dx = knot[0] - knots[i - 1][0];
-				const int dy = knot[1] - knots[i - 1][1];
+				auto& [knot_x, knot_y] = knots[i];
+				const auto& [prev_knot_x, prev_knot_y] = knots[i - 1];
+
+				const int dx = knot_x - prev_knot_x;
+				const int dy = knot_y - prev_knot_y;
 
 				if (dx < -1 || (dx == -1 && std::abs(dy) > 1))
-					knot[0]++;
+					knot_x++;
+
 				if (dx > 1 || (dx == 1 && std::abs(dy) > 1))
-					knot[0]--;
+					knot_x--;
 
 				if (dy < -1 || (dy == -1 && std::abs(dx) > 1))
-					knot[1]++;
+					knot_y++;
+
 				if (dy > 1 || (dy == 1 && std::abs(dx) > 1))
-					knot[1]--;
+					knot_y--;
 			}
 
 			locations.insert(tail);
