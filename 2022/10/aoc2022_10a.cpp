@@ -1,5 +1,6 @@
-#include <iostream>
-#include <string>
+#include <iostream> // std::cout
+#include <string> // std::string, std::getline
+#include <regex> // std::regex, std::smatch, std::match_regex
 
 int main(int argc, const char* argv[])
 {
@@ -7,6 +8,7 @@ int main(int argc, const char* argv[])
 
 	int signal_strength_sum = 0;
 
+	int key_id = 0;
 	const int key_cycles[] {
 		20,
 		60,
@@ -16,31 +18,35 @@ int main(int argc, const char* argv[])
 		220
 	};
 
-	const int *key_cycle = &key_cycles[0];
-
 	int cycle = 1;
-	std::string buffer;
-	while (std::getline(std::cin, buffer))
+	std::string line;
+	while (std::getline(std::cin, line))
 	{
-		int operand = 0;
-		int op_cycles = 1;
+		static const std::regex instruction_pattern{"^(addx|noop)(?: (\\-?\\d+))?$"};
 
-		if (buffer[0] == 'a')
+		std::smatch instruction_match;
+		if (std::regex_match(line, instruction_match, instruction_pattern))
 		{
-			operand = std::stoi(buffer.substr(5));
-			op_cycles = 2;
-		}
+			int operand = 0;
+			int op_cycles = 1;
 
-		for (int c = 0; c < op_cycles; c++, cycle++)
-		{
-			if (cycle == *key_cycle)
+			if (instruction_match.str(1) == "addx")
 			{
-				signal_strength_sum += cycle * rgstr;
-				key_cycle++;
+				operand = std::stoi(instruction_match.str(2));
+				op_cycles = 2;
 			}
-		}
 
-		rgstr += operand;
+			for (int c = 0; c < op_cycles; c++, cycle++)
+			{
+				if (cycle == key_cycles[key_id])
+				{
+					signal_strength_sum += cycle * rgstr;
+					key_id++;
+				}
+			}
+
+			rgstr += operand;
+		}
 	}
 
 	std::cout << signal_strength_sum;

@@ -1,17 +1,17 @@
-#include <iostream>
-#include <numeric>
-#include <string>
-#include <set>
+#include <iostream> // std::cout
+#include <string> // std::string, std::getline, std::stoi
+#include <numeric> // std::accumulate
+#include <set> // std::set
 
 int main(int argc, const char* argv[])
 {
 	std::set<int> top;
 	int current = 0;
 
-	std::string buffer;
-	while (std::getline(std::cin, buffer))
+	std::string line;
+	while (std::getline(std::cin, line))
 	{
-		if (buffer.empty())
+		if (line.empty())
 		{
 			if (top.size() < 3)
 			{
@@ -27,11 +27,11 @@ int main(int argc, const char* argv[])
 		}
 		else
 		{
-			current += std::stoi(buffer);
+			current += std::stoi(line);
 		}
 	}
 
 	std::cout << std::accumulate(top.begin(), top.end(), 0);
-	
+
 	return 0;
 }

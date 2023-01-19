@@ -1,17 +1,17 @@
-#include <iostream>
-#include <string>
+#include <iostream> // std::cout
+#include <string> // std::string, std::getline
 
 int main(int argc, const char* argv[])
 {
 	int score = 0;
 
-	std::string buffer;
-	while (std::getline(std::cin, buffer))
+	std::string line;
+	while (std::getline(std::cin, line))
 	{
-		const int move = static_cast<int>(buffer[0] - 'A');
-		const int response = static_cast<int>(buffer[2] - 'X');
+		const int move = static_cast<int>(line[0] - 'A');
+		const int response = static_cast<int>(line[2] - 'X');
 		const int result = (response + 4 - move) % 3;
-		
+
 		score += response + 1;
 
 		if (result == 1)
