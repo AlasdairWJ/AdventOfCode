@@ -3,7 +3,7 @@
 
 Hello!
 
-All solutions are written in c++, you may need to enable c++17 to compile.
+All solutions are written in c++, some solutiosn will require c++17/20 to compile.
 
 Solutions are designed to take input from file redirection, for example, to run 2021a:
 

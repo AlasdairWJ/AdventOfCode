@@ -1,68 +1,74 @@
-#include <iostream>
-#include <string>
-#include <set>
-#include <cmath>
-
-struct point { int x, y; };
-
-bool operator<(const point& a, const point& b)
-{
-	return (a.x < b.x) || (a.x == b.x && a.y < b.y);
-}
+#include <iostream> // std::cout
+#include <string> // std::string, std::getline
+#include <utility> // std::pair
+#include <set> // std::set
+#include <cmath> // std::abs
 
 int main(int argc, const char* argv[])
 {
+	using point = std::pair<int, int>;
+
 	point knots[10] = {};
-	point &head = knots[0], &tail = knots[9];
+
+	point& head = knots[0];
+	auto& [head_x, head_y] = head;
+
+	const point& tail = knots[9];
+	const auto& [tail_x, tail_y] = tail;
 
 	std::set<point> locations { tail };
 
 	std::string buffer;
 	while (std::getline(std::cin, buffer))
 	{
-		const char direction = buffer[0];
-		const int count = std::stoi(buffer.substr(2));
+		char direction;
+		int count;
+		sscanf_s(buffer.c_str(), "%c %d", &direction, 1u, &count);
 
 		for  (int i = 0; i < count; i++)
 		{
 			switch (direction)
 			{
 			case 'L':
-				head.x--;
+				head_x--;
 				break;
 			case 'R':
-				head.x++;
+				head_x++;
 				break;
 			case 'U':
-				head.y--;
+				head_y--;
 				break;
 			case 'D':
-				head.y++;
+				head_y++;
 				break;
 			}
 
 			for (int i = 1; i < 10; i++)
 			{
-				point &knot = knots[i];
-				const int dx = knot.x - knots[i - 1].x;
-				const int dy = knot.y - knots[i - 1].y;
+				auto& [knot_x, knot_y] = knots[i];
+				const auto& [prev_knot_x, prev_knot_y] = knots[i - 1];
 
-				if (dx < -1 || (dx == -1 && abs(dy) > 1))
-					knot.x++;
-				if (dx > 1 || (dx == 1 && abs(dy) > 1))
-					knot.x--;
+				const int dx = knot_x - prev_knot_x;
+				const int dy = knot_y - prev_knot_y;
 
-				if (dy < -1 || (dy == -1 && abs(dx) > 1))
-					knot.y++;
-				if (dy > 1 || (dy == 1 && abs(dx) > 1))
-					knot.y--;
+				if (dx < -1 || (dx == -1 && std::abs(dy) > 1))
+					knot_x++;
+
+				if (dx > 1 || (dx == 1 && std::abs(dy) > 1))
+					knot_x--;
+
+				if (dy < -1 || (dy == -1 && std::abs(dx) > 1))
+					knot_y++;
+
+				if (dy > 1 || (dy == 1 && std::abs(dx) > 1))
+					knot_y--;
 			}
 
-			locations.emplace(tail);
+			locations.insert(tail);
 		}
 	}
 
-	std::cout << locations.size();	
+	std::cout << locations.size();
 
 	return 0;
 }

@@ -1,5 +1,6 @@
-#include <iostream>
-#include <string>
+#include <iostream> // std::cout
+#include <string> // std::string, std::getline
+#include <regex> // std::regex, std::smatch, std::match_regex
 
 int main(int argc, const char* argv[])
 {
@@ -10,29 +11,35 @@ int main(int argc, const char* argv[])
 	for (auto& row : display)
 		std::fill(row, row + 40, ' ');
 
-	std::string buffer;
-	while (std::getline(std::cin, buffer))
+	std::string line;
+	while (std::getline(std::cin, line))
 	{
-		int operand = 0;
-		int op_cycles = 1;
+		static const std::regex instruction_pattern{ "^(addx|noop)(?: (\\-?\\d+))?$" };
 
-		if (buffer[0] == 'a')
+		std::smatch instruction_match;
+		if (std::regex_match(line, instruction_match, instruction_pattern))
 		{
-			operand = std::stoi(buffer.substr(5));
-			op_cycles = 2;
-		}
+			int operand = 0;
+			int op_cycles = 1;
 
-		for (int i = 0; i < op_cycles; i++, cycle++)
-		{
-			const int c = cycle % 40;
-			if (rgstr - 1 <= c && c <= rgstr + 1)
+			if (line[0] == 'a')
 			{
-				const int r = cycle / 40;
-				display[r][c] = '#';
+				operand = std::stoi(line.substr(5));
+				op_cycles = 2;
 			}
-		}
 
-		rgstr += operand;
+			for (int i = 0; i < op_cycles; i++, cycle++)
+			{
+				const int c = cycle % 40;
+				if (rgstr - 1 <= c && c <= rgstr + 1)
+				{
+					const int r = cycle / 40;
+					display[r][c] = '#';
+				}
+			}
+
+			rgstr += operand;
+		}
 	}
 
 	for (const auto& row : display)

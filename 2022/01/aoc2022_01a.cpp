@@ -1,14 +1,14 @@
-#include <iostream>
-#include <string>
+#include <iostream> // std::cout
+#include <string> // std::string, std::getline, std::stoi
 
 int main(int argc, const char* argv[])
 {
 	int current = 0, best_so_far = 0;
 
-	std::string buffer;
-	while (std::getline(std::cin, buffer))
+	std::string line;
+	while (std::getline(std::cin, line))
 	{
-		if (buffer.empty())
+		if (line.empty())
 		{
 			if (best_so_far == 0 || current > best_so_far)
 			{
@@ -19,7 +19,7 @@ int main(int argc, const char* argv[])
 		}
 		else
 		{
-			current += std::stoi(buffer);
+			current += std::stoi(line);
 		}
 	}
 
