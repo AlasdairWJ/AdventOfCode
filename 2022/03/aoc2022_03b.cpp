@@ -1,34 +1,34 @@
-#include <iostream>
-#include <string>
-#include <set>
-#include <vector>
-#include <algorithm>
-#include <iterator>
-#include <cctype>
+#include <iostream> // std::cout
+#include <string> // std::string, std::getline
+#include <set> // std::set
+#include <algorithm> // std::set_intersection
+#include <iterator> // std::inserter
+#include <cctype> // std::islower
 
 int main(int argc, const char* argv[])
 {
 	int priority_sum = 0;
 
-	std::string a, b, c;
-	while (std::getline(std::cin, a) &&
-		   std::getline(std::cin, b) &&
-		   std::getline(std::cin, c))
+	std::string line_a, line_b, line_c;
+	while (std::getline(std::cin, line_a),
+		   std::getline(std::cin, line_b),
+		   std::getline(std::cin, line_c))
 	{
-		std::set<char> a_letters(a.begin(), a.end()),
-					   b_letters(b.begin(), b.end()),
-					   c_letters(c.begin(), c.end());
+		const std::set<char> a(line_a.begin(), line_a.end()),
+							 b(line_b.begin(), line_b.end()),
+							 c(line_c.begin(), line_c.end());
 
-		std::set<char> ix1, ix2;
-		std::set_intersection(a_letters.begin(), a_letters.end(),
-							  b_letters.begin(), b_letters.end(),
-							  std::inserter(ix1, ix1.begin()));
-		
-		std::set_intersection(ix1.begin(), ix1.end(),
-							  c_letters.begin(), c_letters.end(),
-							  std::inserter(ix2, ix2.begin()));
+		std::set<char> d;
+		std::set_intersection(a.begin(), a.end(),
+							  b.begin(), b.end(),
+							  std::inserter(d, d.begin()));
 
-		const char letter = *ix2.begin();
+		std::set<char> e;
+		std::set_intersection(c.begin(), c.end(),
+							  d.begin(), d.end(),
+							  std::inserter(e, e.begin()));
+
+		const char letter = *e.begin();
 		priority_sum += islower(letter) ? (letter - 'a' + 1) : (letter - 'A' + 27);
 	}
 

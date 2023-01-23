@@ -1,22 +1,20 @@
-#include <iostream>
-#include <string>
-#include <vector>
-#include <regex>
-#include <algorithm>
+#include <iostream> // std::cout
+#include <string> // std::string, std::getline
+#include <vector> //std::vector
+#include <regex> // std::regex, std::smatch, std::regex_match
+#include <optional> // std::optional
+#include <algorithm> // std::sort
+#include <ranges> // std::ranges::subrange, std::views::transform
 
 struct Monkey
 {
 	int id;
-	
+
 	std::vector<int> items;
-	
-	bool is_first_operand_old;
-	int first_operand;
 
+	std::optional<int> first_operand;
 	char operation;
-
-	bool is_second_operand_old;
-	int second_operand;
+	std::optional<int> second_operand;
 
 	int test_value;
 
@@ -25,8 +23,8 @@ struct Monkey
 
 	int operate(const int old_value) const
 	{
-		const int a = is_first_operand_old ? old_value : first_operand;
-		const int b = is_second_operand_old ? old_value : second_operand;
+		const int a = first_operand.value_or(old_value);
+		const int b = second_operand.value_or(old_value);
 		switch (operation)
 		{
 		case '+': return a + b;
@@ -35,7 +33,7 @@ struct Monkey
 		}
 	}
 
-	int target_of(int item)
+	int target_of(int item) const
 	{
 		return (item % test_value == 0) ? target_if_true : target_if_false;
 	}
@@ -43,80 +41,58 @@ struct Monkey
 
 int main(int argc, const char* argv[])
 {
-	const std::regex operation_pattern("^  Operation: new = ([^ ]+) (.) ([^ ]+)$");
 	std::vector<Monkey> monkeys;
 
-	std::string buffer;
-	while (std::getline(std::cin, buffer))
+	std::string line;
+	while (std::getline(std::cin, line))
 	{
 		Monkey monkey;
 
 		// Id
 
-		sscanf_s(buffer.c_str(), "Monkey %d:", &monkey.id);
+		sscanf_s(line.c_str(), "Monkey %d:", &monkey.id);
 
 		// Starting Items
 
-		std::getline(std::cin, buffer);
-		
-		const char* ptr = &buffer[18];
-		while (true)
-		{
-			char* end;
-			const int value = std::strtol(ptr, &end, 10);
-			monkey.items.push_back(value);
-			ptr = end;
+		std::getline(std::cin, line);
 
-			if (*ptr == '\0')
-				break;
+		static const std::regex starting_items_pattern{ "\\d+(?=, |$)" };
 
-			ptr += 2;
-		}
+		auto begin = std::sregex_iterator(line.begin(), line.end(), starting_items_pattern);
+		auto end = std::sregex_iterator();
+
+		auto to_int = [](const auto match) { return std::stoi(match.str()); };
+
+		const auto items = std::ranges::subrange(begin, end) | std::views::transform(to_int);
+
+		monkey.items.assign(items.begin(), items.end());
 
 		// Operation
 
-		std::getline(std::cin, buffer);
+		static const std::regex operation_pattern{ "^  Operation: new = (\\d+|old) (\\+|\\*) (\\d+|old)$" };
+
+		std::getline(std::cin, line);
 
 		std::smatch match;
-		if (std::regex_match(buffer, match, operation_pattern))
+		if (std::regex_match(line, match, operation_pattern))
 		{
-			if (match.str(1) == "old")
-			{
-				monkey.is_first_operand_old = true;
-				monkey.first_operand = 0;
-			}
-			else
-			{
-				monkey.is_first_operand_old = false;
-				monkey.first_operand = std::stoi(match.str(1));
-			}
-
+			if (match.str(1) != "old") monkey.first_operand = std::stoi(match.str(1));
 			monkey.operation = match.str(2).front();
-
-			if (match.str(3) == "old")
-			{
-				monkey.is_second_operand_old = true;
-				monkey.second_operand = 0;
-			}
-			else
-			{
-				monkey.is_second_operand_old = false;
-				monkey.second_operand = std::stoi(match.str(3));
-			}
+			if (match.str(3) != "old") monkey.second_operand = std::stoi(match.str(3));
 		}
 
 		// Test
 
-		std::getline(std::cin, buffer);
-		sscanf_s(buffer.c_str(), "  Test: divisible by %d", &monkey.test_value);
+		std::getline(std::cin, line);
+		sscanf_s(line.c_str(), "  Test: divisible by %d", &monkey.test_value);
 
-		std::getline(std::cin, buffer);
-		sscanf_s(buffer.c_str(), "    If true: throw to monkey %d", &monkey.target_if_true);
-		
-		std::getline(std::cin, buffer);
-		sscanf_s(buffer.c_str(), "    If false: throw to monkey %d", &monkey.target_if_false);
+		std::getline(std::cin, line);
+		sscanf_s(line.c_str(), "    If true: throw to monkey %d", &monkey.target_if_true);
 
-		std::getline(std::cin, buffer);
+		std::getline(std::cin, line);
+		sscanf_s(line.c_str(), "    If false: throw to monkey %d", &monkey.target_if_false);
+
+		std::getline(std::cin, line);
 
 		monkeys.push_back(monkey);
 	}

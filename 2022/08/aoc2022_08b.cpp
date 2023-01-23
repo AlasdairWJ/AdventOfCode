@@ -1,17 +1,17 @@
-#include <iostream>
-#include <string>
-#include <vector>
+#include <iostream> // std::cout
+#include <string> // std::string, std::getline
+#include <vector> // std::vector
 
 int main(int argc, const char* argv[])
 {
-	std::vector<std::string> heights;
+	std::vector<std::string> tree_sizes;
 
-	std::string buffer;
-	while (std::getline(std::cin, buffer))
-		heights.push_back(buffer);
+	std::string lines;
+	while (std::getline(std::cin, lines))
+		tree_sizes.push_back(lines);
 
-	const int row_count = heights.size();
-	const int col_count = heights.front().size();
+	const int row_count = tree_sizes.size();
+	const int col_count = tree_sizes.front().size();
 
 	int max_scenic_score = 0;
 
@@ -19,66 +19,28 @@ int main(int argc, const char* argv[])
 	{
 		for (int col = 1; col < col_count - 1; col++)
 		{
-			const char target_height = heights[row][col];
+			const char current_tree_size = tree_sizes[row][col];
 
-			char smallest_visible_tree = '\0';
-			int down_count = 0;
-			for (int r = row + 1; r < row_count; r++)
-			{
-				const char height = heights[r][col];
-				if (smallest_visible_tree == '\0' || height > smallest_visible_tree)
-				{
-					smallest_visible_tree = smallest_visible_tree;
-					down_count++;
-				}
-				if (height >= target_height)
-					break;
-			}
+			int r, c;
+			char tree_size;
 
-			smallest_visible_tree = '\0';
 			int up_count = 0;
-			for (int r = row - 1; r >= 0; r--)
-			{
-				const char height = heights[r][col];
-				if (smallest_visible_tree == '\0' || height > smallest_visible_tree)
-				{
-					smallest_visible_tree = smallest_visible_tree;
-					up_count++;
-				}
-				if (height >= target_height)
-					break;
-			}
+			for (r = row - 1, tree_size = '\0'; r >= 0 && tree_size < current_tree_size; r--, up_count++)
+				tree_size = tree_sizes[r][col];
 
-			smallest_visible_tree = '\0';
-			int right_count = 0;
-			for (int c = col + 1; c < col_count; c++)
-			{
-				const char height = heights[row][c];
-				if (smallest_visible_tree == '\0' || height > smallest_visible_tree)
-				{
-					smallest_visible_tree = smallest_visible_tree;
-					right_count++;
-				}
-				if (height >= target_height)
-					break;
-			}
-
-			smallest_visible_tree = '\0';
 			int left_count = 0;
-			for (int c = col - 1; c >= 0; c--)
-			{
-				const char height = heights[row][c];
-				if (smallest_visible_tree == '\0' || height > smallest_visible_tree)
-				{
-					smallest_visible_tree = smallest_visible_tree;
-					left_count++;
-				}
-				if (height >= target_height)
-					break;
-			}
+			for (c = col - 1, tree_size = '\0'; c >= 0 && tree_size < current_tree_size; c--, left_count++)
+				tree_size = tree_sizes[row][c];
 
-			const int score = down_count * up_count * left_count * right_count;
-			if (score > max_scenic_score)
+			int down_count = 0;
+			for (r = row + 1, tree_size = '\0'; r < row_count && tree_size < current_tree_size; r++, down_count++)
+				tree_size = tree_sizes[r][col];
+
+			int right_count = 0;
+			for (c = col + 1, tree_size = '\0'; c < col_count && tree_size < current_tree_size; c++, right_count++)
+				tree_size = tree_sizes[row][c];
+
+			if (const int score = up_count * left_count * down_count * right_count; score > max_scenic_score)
 				max_scenic_score = score;
 		}
 	}

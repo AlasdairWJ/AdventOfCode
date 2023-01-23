@@ -1,88 +1,65 @@
-#include <iostream>
-#include <string>
-#include <vector>
+#include <iostream> // std::cout
+#include <string> // std::string, std::getline
+#include <vector> //std::vector
+#include <regex> // std::regex, std::sregex_token_iterator
+#include <ranges> // std::ranges::subrange, std::views::drop, std::views::elements
+#include <algorithm> // std::ranges::minmax_element
 
-struct point { int x, y; };
-
-int compare(const int a, const int b)
-{
-	return (a > b) - (a < b);
-}
-
-template<typename T>
-struct grid_t
-{
-	grid_t(const int left, const int right, const int top, const int bottom) :
-		m_left(left),
-		m_width(right - left + 1),
-		m_top(top),
-		m_height(bottom - top + 1),
-		m_data(std::make_unique<T[]>(m_width * m_height))
-	{
-	}
-
-	T& at(const int x, const int y)
-	{
-		return m_data[(y - m_top) * m_width + (x - m_left)];
-	}
-
-private:
-	const int m_left, m_width, m_top, m_height;
-	const std::unique_ptr<T[]> m_data;
-};
+int compare(const int a, const int b) { return (a > b) - (a < b); }
 
 int main(int argc, const char* argv[])
 {
-	int left = 500, right = 500, bottom = 0;
+	using point = std::pair<int, int>;
+	std::vector<std::vector<point>> all_lines;
 
-	std::vector<std::vector<point>> all_lines; 
-
-	std::string buffer;
-	while (std::getline(std::cin, buffer))
+	std::string line;
+	while (std::getline(std::cin, line))
 	{
 		std::vector<point> lines;
 
-		const char* s = buffer.c_str();
-		do
+		const std::regex lines_pattern{ "\\d+,\\d+(?= \\-\\> |$)" };
+
+		const auto begin = std::sregex_token_iterator(line.begin(), line.end(), lines_pattern);
+		const auto end = std::sregex_token_iterator();
+
+		for (const auto& match : std::ranges::subrange(begin, end))
 		{
-			char* end;
-			const int x = std::strtol(s, &end, 10);
-			s = end;
-
-			if (x < left)
-				left = x;
-			if (x > right)
-				right = x;
-
-			s++;
-			const int y = std::strtol(s, &end, 10);
-			s = end;
-
-			if (y > bottom)
-				bottom = y;
-
-			if (*s != '\0')
-				s += 4;
-
-			lines.push_back({x, y});
+			int x, y;
+			sscanf_s(match.str().c_str(), "%d,%d", &x, &y);
+			lines.emplace_back(x, y);
 		}
-		while (*s != '\0');
 
 		all_lines.push_back(lines);
 	}
-	
-	grid_t<bool> grid(left, right, 0, bottom);
+
+	auto all_points = all_lines | std::views::join;
+
+	auto all_x = std::views::elements<0>(all_points);
+	auto all_y = std::views::elements<1>(all_points);
+
+	const auto [left_it, right_it] = std::ranges::minmax_element(all_x);
+	const int left = *left_it, right = *right_it;
+
+	const int bottom = *std::ranges::max_element(all_y);
+
+	const int width = right - left + 1;
+	const int height = bottom + 1;
+
+	const auto at = [&](const int x, const int y) -> int8_t&
+	{
+		static std::vector<int8_t> data(width * height);
+		return data[y * width + x - left];
+	};
 
 	for (const auto& lines : all_lines)
 	{
-		auto it = lines.begin();
-		point p = *it;
-		for (it++; it != lines.end(); it++)
+		auto [x, y] = lines.front();
+		for (const auto& [dst_x, dst_y] : lines | std::views::drop(1))
 		{
-			const int dx = compare(it->x, p.x), dy = compare(it->y, p.y);
-			for (; p.x != it->x || p.y != it->y; p.x += dx, p.y += dy)
-				grid.at(p.x, p.y) = true;
-			grid.at(p.x, p.y) = true;
+			for (const int dx = compare(dst_x, x), dy = compare(dst_y, y);
+				x != dst_x || y != dst_y; x += dx, y += dy)
+				at(x, y) = true;
+			at(x, y) = true;
 		}
 	}
 
@@ -90,36 +67,36 @@ int main(int argc, const char* argv[])
 	bool entered_void = false;
 	while (!entered_void)
 	{
-		point p { 500, 0 };
+		int x = 500, y = 0;
 
 		bool at_rest = false;
 		while (!at_rest && !entered_void)
 		{
-			if (p.y == bottom)
+			if (y == bottom)
 			{
 				entered_void = true;
 			}
-			else if (!grid.at(p.x, p.y + 1))
+			else if (!at(x, y + 1))
 			{
-				p.y++;
+				y++;
 			}
-			else if (p.x == left)
+			else if (x == left)
 			{
 				entered_void = true;
 			}
-			else if (!grid.at(p.x - 1, p.y + 1))
+			else if (!at(x - 1, y + 1))
 			{
-				p.x--;
-				p.y++;
+				x--;
+				y++;
 			}
-			else if (p.x == right)
+			else if (x == right)
 			{
 				entered_void = true;
 			}
-			else if (!grid.at(p.x + 1, p.y + 1))
+			else if (!at(x + 1, y + 1))
 			{
-				p.x++;
-				p.y++;
+				x++;
+				y++;
 			}
 			else
 			{
@@ -129,7 +106,7 @@ int main(int argc, const char* argv[])
 
 		if (at_rest)
 		{
-			grid.at(p.x, p.y) = true;
+			at(x, y) = true;
 			units_at_rest++;
 		}
 	}
