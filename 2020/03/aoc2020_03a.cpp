@@ -1,27 +1,16 @@
 #include <iostream>
 #include <string>
-#include <vector>
 
-int main(int argc, const char* argv[])
+int main(int _, const char*[])
 {
-	std::vector<std::string> trees;
-
-	std::string line;
-	while (std::getline(std::cin, line))
-		trees.push_back(line);
-
-	int x = 0;
 	int count = 0;
 
-	for (const auto& row : trees)
+	std::string line;
+	for (int x = 0; std::getline(std::cin, line); x += 3)
 	{
-		if (row[x % (int)row.size()] == '#')
+		if (line[x % static_cast<int>(line.size())] == '#')
 			count++;
-
-		x += 3;
 	}
 
 	std::cout << count;
-
-	return 0;
 }

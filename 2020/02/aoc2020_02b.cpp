@@ -1,29 +1,33 @@
 #include <iostream>
 #include <string>
+#include <regex>
+#include <charconv> // std::from_chars
 
-int main(int argc, const char* argv[])
+const std::regex policy_password_re{ "^(\\d+)\\-(\\d+) (\\w): (\\w+)$" };
+
+int main(int _, const char*[])
 {
 	int valid_count = 0;
 
-	std::string line;
-	while (std::getline(std::cin, line))
+	for (std::string line; std::getline(std::cin, line); )
 	{
-		int lower, upper, n;
-		char letter;
-		sscanf_s(line.c_str(),
-				 "%d-%d %c: %n",
-				 &lower,
-				 &upper,
-				 &letter, 1u,
-				 &n);
+		std::cmatch match;
+		if (std::regex_match(line.c_str(), match, policy_password_re))
+		{
+			int lower;
+			std::from_chars(match[1].first, match[1].second, lower);
 
-		const std::string password = line.substr(n);
+			int upper;
+			std::from_chars(match[2].first, match[2].second, upper);
 
-		if ((password[lower-1] == letter) != (password[upper-1] == letter))
-			valid_count++;
+			const char letter = *match[3].first;
+
+			const std::string password = match[4];
+
+			if ((password[lower-1] == letter) != (password[upper-1] == letter))
+				valid_count++;
+		}		
 	}
 
 	std::cout << valid_count;
-
-	return 0;
 }

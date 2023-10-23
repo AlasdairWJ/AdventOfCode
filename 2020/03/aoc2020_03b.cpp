@@ -2,39 +2,36 @@
 #include <string>
 #include <vector>
 
-int tree_count(const int dx, const int dy, const std::vector<std::string>& trees)
+int main(int _, const char*[])
 {
-	int count = 0;
+	std::vector<std::string> rows;
 
-	for (int x = 0, y = 0; y < trees.size(); x += dx, y += dy)
+	for (std::string line; std::getline(std::cin, line); )
+		rows.push_back(line);
+
+	const int row_size = static_cast<int>(rows[0].size());
+
+	const int slopes[][2]{
+		{ 1, 1 },
+		{ 3, 1 },
+		{ 5, 1 },
+		{ 7, 1 },
+		{ 1, 2 }
+	};
+
+	long long product = 1;
+	for (const auto& [dx, dy] : slopes)
 	{
-		const auto& row = trees[y];
-		if (row[x % (int)row.size()] == '#')
-			count++;
+		int count = 0;
+
+		for (int x = 0, y = 0; y < rows.size(); x += dx, y += dy)
+		{
+			if (rows[y][x % row_size] == '#')
+				count++;
+		}
+
+		product *= count;
 	}
 
-	return count;
-}
-
-int main(int argc, const char* argv[])
-{
-	std::vector<std::string> trees;
-
-	std::string line;
-	while (std::getline(std::cin, line))
-		trees.push_back(line);
-
-	const int slopes[][2] = {{ 1, 1 },
-							 { 3, 1 },
-							 { 5, 1 },
-							 { 7, 1 },
-							 { 1, 2 }};
-
-	__int64 product = 1;
-	for (const auto& slope : slopes)
-		product *= tree_count(slope[0], slope[1], trees);
-
 	std::cout << product;
-
-	return 0;
 }

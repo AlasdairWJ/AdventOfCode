@@ -1,12 +1,70 @@
 #include <iostream>
 #include <string>
+#include <string_view>
 #include <map>
 #include <set>
-#include <sstream>
-#include <cctype>
+#include <ranges> // std::views::split
+#include <cctype> // std::isdigit, std::isxdigit
 #include <algorithm> // std::all_of
+#include <charconv> // std::from_chars
 
-const std::set<std::string> valid_eye_colours
+template <typename T>
+auto from_chars(const std::string_view text, T& value)
+{
+	return std::from_chars(text.data(), text.data() + text.size(), value);
+}
+
+using validator_t = bool(*)(std::string_view);
+
+bool validate_byr(const std::string_view text)
+{
+	int year{};
+	const auto [_, ec] = from_chars(text, year);
+	return ec == std::errc{} && year >= 1920 && year <= 2002;
+}
+
+bool validate_iyr(const std::string_view text)
+{
+	int year{};
+	const auto [_, ec] = from_chars(text, year);
+	return ec == std::errc{} && year >= 2010 && year <= 2020;
+}
+
+bool validate_eyr(const std::string_view text)
+{
+	int year{};
+	const auto [_, ec] = from_chars(text, year);
+	return ec == std::errc{} && year >= 2020 && year <= 2030;
+}
+
+bool validate_hgt(const std::string_view text)
+{
+	int x;
+	const auto [ptr, ec] = from_chars(text, x);
+
+	if (ec != std::errc{})
+		return false;
+
+	const std::string_view unit{ ptr, text.data() + text.size() };
+
+	if (unit == "in")
+		return 59 <= x && x <= 76;
+
+	if (unit == "cm")
+		return 150 <= x && x <= 193;
+
+	return false;
+}
+
+bool validate_hcl(const std::string_view text)
+{
+	return
+		(text.size() == 7) &&
+		(text[0] == '#') && 
+		std::all_of(text.begin() + 1, text.end(), std::isxdigit);
+}
+
+const std::set<std::string_view> valid_eye_colours
 {
 	"amb",
 	"blu",
@@ -17,123 +75,61 @@ const std::set<std::string> valid_eye_colours
 	"oth"
 };
 
-const std::map<std::string, bool(*)(const std::string&)> validators
+bool validate_ecl(const std::string_view text)
 {
-	{
-		"byr",
-		[](const std::string& value) -> bool
-		{
-			const int year = std::stoi(value);
-			return year >= 1920 && year <= 2002;
-		}
-	},
-	{
-		"iyr",
-		[](const std::string& value) -> bool
-		{
-			const int year = std::stoi(value);
-			return year >= 2010 && year <= 2020;
-		}
-	},
-	{
-		"eyr",
-		[](const std::string& value) -> bool
-		{
-			const int year = std::stoi(value);
-			return year >= 2020 && year <= 2030;
-		}
-	},
-	{
-		"hgt",
-		[](const std::string& value) -> bool
-		{
-			std::stringstream ss(value);
+	return valid_eye_colours.contains(text);
+}
 
-			int x;
-			ss >> x;
+bool validate_pid(const std::string_view text)
+{
+	return 
+		(text.size() == 9) && 
+		std::all_of(text.begin(), text.end(), std::isdigit);
+}
 
-			std::string unit;
-			ss >> unit;
-
-			if (unit == "in")
-				return 59 <= x && x <= 76;
-
-			if (unit == "cm")
-				return 150 <= x && x <= 193;
-
-			return false;
-		}
-	},
-	{
-		"hcl",
-		[](const std::string& value) -> bool
-		{
-			if (value.size() != 7)
-				return false;
-
-			if (value[0] != '#')
-				return false;
-
-			return std::all_of(value.begin() + 1, value.end(), isxdigit);
-		}
-	},
-	{
-		"ecl",
-		[](const std::string& value) -> bool
-		{
-			return valid_eye_colours.find(value) != valid_eye_colours.end();
-		}
-	},
-	{
-		"pid",
-		[](const std::string& value) -> bool
-		{
-			return value.size() == 9 && std::all_of(value.begin(), value.end(), isdigit);
-		}
-	}
+const std::map<std::string_view, validator_t> validators{
+	{ "byr", validate_byr },
+	{ "iyr", validate_iyr },
+	{ "eyr", validate_eyr },
+	{ "hgt", validate_hgt },
+	{ "hcl", validate_hcl },
+	{ "ecl", validate_ecl },
+	{ "pid", validate_pid }
 };
 
-int main(int argc, const char* argv[])
+int main(int _, const char*[])
 {
 	int valid_passports = 0;
-	int valid_field_count = 0;
 
-	std::string line;
-	while (std::getline(std::cin, line))
+	while (std::cin)
 	{
-		if (line.empty())
+		int valid_field_count = 0;
+		
+		for (std::string line; std::getline(std::cin, line) && !line.empty(); )
 		{
-			if (valid_field_count == 7)
-				valid_passports++;
+			for (auto && r : std::views::split(line, ' '))
+			{
+				const std::string_view key_val_str{ r.begin(), r.end() };
 
-			valid_field_count = 0;
-			continue;
+				const std::size_t separator_ix = key_val_str.find(':');
+				const std::string_view field = key_val_str.substr(0, separator_ix);
+				const std::string_view value = key_val_str.substr(separator_ix + 1);
+
+				if (field != "cid")
+				{
+					const auto validator_it = validators.find(field);
+					if (validator_it != validators.end())
+					{
+						if (validator_it->second(value))
+							valid_field_count++;
+					}
+				}
+			}
 		}
 
-		std::stringstream ss(line);
-
-		std::string property;
-		while (ss >> property)
-		{
-			const auto ix = property.find(':');
-
-			const std::string field = property.substr(0, ix);
-
-			if (field == "cid")
-				continue;
-
-			const std::string value = property.substr(ix + 1);
-
-			const auto validator = validators.find(field);
-			if (validator != validators.end() && validator->second(value))
-				valid_field_count++;
-		}
+		if (valid_field_count == 7)
+			valid_passports++;
 	}
 
-	if (valid_field_count == 7)
-		valid_passports++;
-
 	std::cout << valid_passports;
-
-	return 0;
 }
