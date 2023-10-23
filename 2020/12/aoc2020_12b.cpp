@@ -1,9 +1,9 @@
 #include <iostream>
 
-void rotate_left(int& dx, int& dy) { std::swap(dx = -dx, dy); }
-void rotate_right(int& dx, int& dy) { std::swap(dx, dy = -dy); }
+void rotate_ccw(int& dx, int& dy) { std::swap(dx = -dx, dy); }
+void rotate_cw(int& dx, int& dy) { std::swap(dx, dy = -dy); }
 
-int main(int argc, const char* argv[])
+int main(int _, const char*[])
 {
 	int x = 0, y = 0;
 	int waypoint_x = 10, waypoint_y = -1;
@@ -33,14 +33,14 @@ int main(int argc, const char* argv[])
 		case 'L':
 			while (value > 0)
 			{
-				rotate_left(waypoint_x, waypoint_y);
+				rotate_ccw(waypoint_x, waypoint_y);
 				value -= 90;
 			}
 			break;
 		case 'R':
 			while (value > 0)
 			{
-				rotate_right(waypoint_x, waypoint_y);
+				rotate_cw(waypoint_x, waypoint_y);
 				value -= 90;
 			}
 			break;
@@ -50,6 +50,4 @@ int main(int argc, const char* argv[])
 	}
 
 	std::cout << std::abs(x) + std::abs(y);
-
-	return 0;
 }

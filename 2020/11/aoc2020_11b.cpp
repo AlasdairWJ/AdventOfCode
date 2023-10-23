@@ -2,8 +2,7 @@
 #include <string>
 #include <vector>
 #include <algorithm> // std::count
-
-using Board = std::vector<std::string>;
+#include <ranges> // std::views::join
 
 const int deltas[][2]
 {
@@ -19,7 +18,7 @@ const int deltas[][2]
 
 int main(int argc, const char* argv[])
 {
-	Board board;
+	std::vector<std::string> board;
 
 	std::string row;
 	while (std::getline(std::cin, row))
@@ -28,7 +27,7 @@ int main(int argc, const char* argv[])
 	const int max_y = board.size() - 1;
 	const int max_x = board[0].size() - 1;
  
-	Board next = board;
+	auto next = board;
 
 	bool any_updates;
 
@@ -40,11 +39,11 @@ int main(int argc, const char* argv[])
 			for (int x = 0; x <= max_x; x++)
 			{
 				int n = 0;
-				for (const auto& delta : deltas)
+				for (const auto& [dx, dy] : deltas)
 				{
-					for (int x2 = x + delta[0], y2 = y + delta[1];
+					for (int x2 = x + dx, y2 = y + dy;
 						x2 >= 0 && x2 <= max_x && y2 >= 0 && y2 <= max_y;
-						x2 += delta[0], y2 += delta[1])
+						x2 += dx, y2 += dy)
 					{
 						const char seat = board[y2][x2];
 						if (seat != '.')
@@ -79,11 +78,5 @@ int main(int argc, const char* argv[])
 	}
 	while (any_updates);
 
-	int seated_count = 0;
-	for (const auto& row : board)
-		seated_count += std::count(row.begin(), row.end(), '#');
-
-	std::cout << seated_count;
-
-	return 0;
+	std::cout << std::ranges::count(board | std::views::join, '#');
 }

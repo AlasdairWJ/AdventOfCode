@@ -1,9 +1,8 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <algorithm> // std::count
-
-using Board = std::vector<std::string>;
+#include <algorithm> // std::ranges::count
+#include <ranges> // std::views::join
 
 const int deltas[][2]
 {
@@ -14,21 +13,20 @@ const int deltas[][2]
 	{  1,  0 },
 	{  1, -1 },
 	{  0, -1 },
-	{ -1, -1 },
+	{ -1, -1 }
 };
 
-int main(int argc, const char* argv[])
+int main(int _, const char*[])
 {
-	Board board;
+	std::vector<std::string> board;
 
-	std::string row;
-	while (std::getline(std::cin, row))
+	for (std::string row; std::getline(std::cin, row); )
 		board.push_back(row);
 
 	const int max_y = board.size() - 1;
 	const int max_x = board[0].size() - 1;
  
-	Board next = board;
+	auto next = board;
 
 	bool any_updates;
 
@@ -40,9 +38,9 @@ int main(int argc, const char* argv[])
 			for (int x = 0; x <= max_x; x++)
 			{
 				int n = 0;
-				for (const auto& delta : deltas)
+				for (const auto& [dx, dy] : deltas)
 				{
-					const int x2 = x + delta[0], y2 = y + delta[1];
+					const int x2 = x + dx, y2 = y + dy;
 					if (x2 >= 0 && x2 <= max_x && y2 >= 0 && y2 <= max_y)
 						if (board[y2][x2] == '#')
 							n++;
@@ -70,11 +68,5 @@ int main(int argc, const char* argv[])
 	}
 	while (any_updates);
 	
-	int seated_count = 0;
-	for (const auto& row : board)
-		seated_count += std::count(row.begin(), row.end(), '#');
-
-	std::cout << seated_count;
-
-	return 0;
+	std::cout << std::ranges::count(board | std::views::join, '#');
 }

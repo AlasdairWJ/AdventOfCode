@@ -1,23 +1,24 @@
 #include <iostream>
+#include <string>
+#include <ranges> // std::views::split
 
-int main(int argc, const char* argv[])
+int main(int _, const char*[])
 {
-	int minutes;
-	std::cin >> minutes;
+	std::string line;
+	std::getline(std::cin, line);
+
+	const int minutes = std::stoi(line);
 
 	int best_wait_time = minutes;
 	int best_product = 1;
 
-	do
+	std::getline(std::cin, line);
+
+	for (auto && r : line | std::views::split(','))
 	{
-		if (std::cin.peek() == 'x')
+		if (const std::string item{ r.begin(), r.end() }; item != "x")
 		{
-			std::cin.ignore(1);
-		}
-		else
-		{
-			int bus_id;
-			std::cin >> bus_id;
+			const int bus_id = std::stoi(item);
 
 			const int wait_time = bus_id - minutes % bus_id;
 			if (wait_time < best_wait_time)
@@ -26,11 +27,7 @@ int main(int argc, const char* argv[])
 				best_product = wait_time * bus_id;
 			}
 		}
-
 	}
-	while (std::cin.get() == ',');
 
 	std::cout << best_product;
-
-	return 0;
 }
