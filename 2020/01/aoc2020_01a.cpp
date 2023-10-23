@@ -1,24 +1,16 @@
 #include <iostream>
 #include <set>
+#include <algorithm> // std::ranges::find_if
 
 constexpr int target = 2020;
 
-int main(int argc, const char* argv[])
+int main(int _, const char*[])
 {
 	std::set<int> entries;
 
-	int value;
-	while (std::cin >> value)
+	for (int value; std::cin >> value; )
 		entries.insert(value);
 
-	for (const int a : entries)
-	{
-		if (const auto b = entries.find(target - a); b != entries.end())
-		{
-			std::cout << a * *b;
-			break;
-		}
-	}
-
-	return 0;
+	const int a = *std::ranges::find_if(entries, [&](int x){ return entries.find(target - x) != entries.end(); });
+	std::cout << a * (target - a);
 }

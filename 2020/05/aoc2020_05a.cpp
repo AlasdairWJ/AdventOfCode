@@ -1,26 +1,23 @@
 #include <iostream>
 #include <string>
 
-int main(int argc, const char* argv[])
+int main(int _, const char* [])
 {
 	int max_seat_id = -1;
 
-	std::string line;
-	while (std::getline(std::cin, line))
+	auto reduce = [](auto begin, const int n, const char upper_letter)
 	{
-		int lower = 0, upper = 128;
+		int lower = 0, upper = 1 << n;
+		for (auto it = begin; it != begin + n; ++it)
+			(*it == upper_letter ? upper : lower) = (lower + upper) / 2;
 
-		for (int i = 0; i < 7; i++)
-			(line[i] == 'F' ? upper : lower) = (lower + upper) / 2;
+		return lower;
+	};
 
-		const int row = lower;
-
-		lower = 0, upper = 8;
-
-		for (int i = 7; i < 11; i++)
-			(line[i] == 'L' ? upper : lower) = (lower + upper) / 2;
-
-		const int column = lower;
+	for (std::string line; std::getline(std::cin, line); )
+	{
+		const int row = reduce(line.begin(), 7, 'F');
+		const int column = reduce(line.begin() + 7, 3, 'L');
 
 		const int seat_id = 8 * row + column;
 
@@ -28,7 +25,4 @@ int main(int argc, const char* argv[])
 			max_seat_id = seat_id;
 	}
 
-	std::cout << max_seat_id;
-
-	return 0;
-}
+	std::cout << max_seat_id;}
