@@ -1,22 +1,22 @@
 #include <iostream>
 #include <vector>
+#include <algorithm> // std::ranges::max_element
 
-int main(int argc, const char* argv[])
+int main(int _, const char*[])
 {
-	std::vector<bool> joltages;
+	std::vector<int> inputs;
 
-	int joltage, max_joltage = -1;
-	while (std::cin >> joltage)
-	{
-		if (joltage > max_joltage)
-		{
-			max_joltage = joltage;
-			joltages.resize(max_joltage + 1);
-		}
+	for (int joltage; std::cin >> joltage; )
+		inputs.push_back(joltage);
+
+	const int max_joltage = *std::ranges::max_element(inputs);
+
+	std::vector<bool> joltages(max_joltage + 1);
+
+	for (const int joltage : inputs)
 		joltages[joltage] = true;
-	}
 
-	std::vector<__int64> cumulative_joltages(joltages.size());
+	std::vector<long long> cumulative_joltages(max_joltage + 1);
 
 	joltages[0] = true;
 	cumulative_joltages[0] = 1;
@@ -27,6 +27,4 @@ int main(int argc, const char* argv[])
 				cumulative_joltages[j + i] += cumulative_joltages[j];
 
 	std::cout << cumulative_joltages[max_joltage];
-	
-	return 0;
 }
