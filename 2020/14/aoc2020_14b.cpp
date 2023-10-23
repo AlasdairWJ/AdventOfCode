@@ -1,66 +1,65 @@
 #include <iostream>
 #include <string>
+#include <regex>
+#include <bitset>
 #include <map>
-#include <algorithm> // std::count
+#include <algorithm> // std::count, std::ranges::reverse
+#include <numeric> // std::accumulate
+#include <ranges> // std::views::values
 
-template <typename T> T& clrb(T& mask, const int bit) { return mask &= ~(T(1) << bit); }
-template <typename T> T& setb(T& mask, const int bit) { return mask |= T(1) << bit; }
+const std::regex mem_re{ "mem\\[(\\d+)\\] \\= (\\d+)" };
 
-int main(int argc, const char* argv[])
+int main(int _, const char*[])
 {
-	std::map<uint64_t, uint64_t> memory;
+	std::map<unsigned long long, unsigned long long> memory;
 
 	unsigned limit;
-	std::string mask;
 
-	std::string line;
-	while (std::getline(std::cin, line))
+	std::string mask;
+	for (std::string line; std::getline(std::cin, line); )
 	{
-		if (strncmp(line.c_str(), "mask", 4) == 0)
+		if (line.starts_with("mask"))
 		{
 			mask = line.substr(7);
+			std::ranges::reverse(mask);
+
 			limit = 1u << std::count(mask.begin(), mask.end(), 'X');
 		}
-		else if (strncmp(line.c_str(), "mem", 3) == 0)
+		else
 		{
-			uint64_t position, value;
-			sscanf_s(line.c_str(), "mem[%llu] = %llu", &position, &value);
-
-			for (unsigned x = 0; x < limit; x++)
+			std::cmatch match;
+			if (std::regex_match(line.c_str(), match, mem_re))
 			{
-				unsigned bit = 1;
-				for (int i = 0; i < mask.size(); i++)
+				std::bitset<64> position{ std::strtoull(match[1].first, nullptr, 10) };
+				const unsigned long long value = std::strtoull(match[2].first, nullptr, 10);
+
+				for (unsigned x = 0; x < limit; x++)
 				{
-					switch (mask[mask.size() - i - 1])
+					unsigned bit = 1;
+					for (int i = 0; i < mask.size(); i++)
 					{
-					case 'X':
-						if ((x & bit) == bit)
-							setb(position, i);
-						else
-							clrb(position, i);
+						switch (mask[i])
+						{
+						case 'X':
+							position.set(i, (x & bit) != 0);
+							bit <<= 1;
+							break;
 
-						bit <<= 1;
-						break;
+						case '1':
+							position.set(i);
+							break;
 
-					case '1':
-						setb(position, i);
-						break;
-
-					default:
-						break;
+						default:
+							break;
+						}
 					}
+
+					memory[position.to_ullong()] = value;
 				}
-				memory[position] = value;
 			}
 		}
 	}
 
-	uint64_t sum = 0;
-
-	for (const auto& [_, value] : memory)
-		sum += value;
-	
-	std::cout << sum;
-
-	return 0;
+	auto values = memory | std::views::values;
+	std::cout << std::accumulate(values.begin(), values.end(), 0ull);
 }

@@ -3,17 +3,19 @@
 
 constexpr int N = 30'000'000;
 
-int main(int argc, const char* argv[])
+int main(int _, const char*[])
 {
 	std::map<int, int> last_indices;
 
 	int n = 0, value;
-	do
+
+	while (std::cin)
 	{
 		std::cin >> value;
-		last_indices[value] = n++;
+		last_indices.emplace(value, n++);
+
+		std::cin.get();
 	}
-	while (std::cin.get() == ',');
 
 	for (; n < N; n++)
 	{
@@ -31,6 +33,4 @@ int main(int argc, const char* argv[])
 	}
 	
 	std::cout << value;
-
-	return 0;
 }

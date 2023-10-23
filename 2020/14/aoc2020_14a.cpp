@@ -1,55 +1,56 @@
 #include <iostream>
 #include <string>
+#include <regex>
+#include <bitset>
 #include <map>
+#include <algorithm> // std::ranges::reverse
+#include <numeric> // std::accumulate
+#include <ranges> // std::views::values
 
-template <typename T> T& clrb(T& mask, const int bit) { return mask &= ~(T(1) << bit); }
-template <typename T> T& setb(T& mask, const int bit) { return mask |= T(1) << bit; }
+const std::regex mem_re{ "mem\\[(\\d+)\\] \\= (\\d+)" };
 
-int main(int argc, const char* argv[])
+int main(int _, const char*[])
 {
-	std::map<int, uint64_t> memory;
+	std::map<int, unsigned long long> memory;
 
 	std::string mask;
-
-	std::string line;
-	while (std::getline(std::cin, line))
+	for (std::string line; std::getline(std::cin, line); )
 	{
-		if (strncmp(line.c_str(), "mask", 4) == 0)
+		if (line.starts_with("mask"))
 		{
 			mask = line.substr(7);
+			std::ranges::reverse(mask);
 		}
-		else if (strncmp(line.c_str(), "mem", 3) == 0)
+		else
 		{
-			int position;
-			uint64_t value;
-			sscanf_s(line.c_str(), "mem[%d] = %llu", &position, &value);
-
-			for (int i = 0; i < mask.size(); i++)
+			std::cmatch match;
+			if (std::regex_match(line.c_str(), match, mem_re))
 			{
-				switch (mask[mask.size() - i - 1])
+				const int position = std::strtol(match[1].first, nullptr, 10);
+				std::bitset<64> value{ std::strtoull(match[2].first, nullptr, 10) };
+
+				for (int i = 0; i < mask.size(); i++)
 				{
-				case '0':
-					clrb(value, i);
-					break;
+					switch (mask[i])
+					{
+					case '0':
+						value.reset(i);
+						break;
 
-				case '1':
-					setb(value, i);
-					break;
+					case '1':
+						value.set(i);
+						break;
 
-				default:
-					break;
+					default:
+						break;
+					}
 				}
+
+				memory[position] = value.to_ullong();
 			}
-			memory[position] = value;
 		}
 	}
 
-	uint64_t sum = 0;
-
-	for (const auto& [_, value] : memory)
-		sum += value;
-	
-	std::cout << sum;
-
-	return 0;
+	auto values = memory | std::views::values;
+	std::cout << std::accumulate(values.begin(), values.end(), 0ull);
 }
