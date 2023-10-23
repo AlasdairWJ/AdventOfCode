@@ -3,91 +3,88 @@
 #include <vector>
 #include <map>
 
-enum OpCode { ACC, JMP, NOP };
+enum class op_code_e { acc, jmp, nop };
 
-const std::map<std::string, OpCode> op_codes
+int main(int _, const char*[])
 {
-	{ "acc", ACC },
-	{ "jmp", JMP },
-	{ "nop", NOP }
-};
+	std::vector<std::pair<op_code_e, int>> program;
 
-using Program = std::vector<std::pair<OpCode, int>>;
-
-bool is_valid_program(const Program& program, int& acc)
-{
-	int pc = 0;
-	acc = 0;
-
-	std::vector<bool> has_been_executed(program.size(), false);
-
-	while (pc < program.size())
+	for (std::string line; std::getline(std::cin, line); )
 	{
-		const auto& [op, value] = program[pc];
+		op_code_e op_code{};
+		if (line.starts_with("acc"))
+			op_code = op_code_e::acc;
+		else if (line.starts_with("jmp"))
+			op_code = op_code_e::jmp;
+		else if (line.starts_with("nop"))
+			op_code = op_code_e::nop;
+		else
+			continue;
 
-		if (has_been_executed[pc])
-			return false;
+		const int value = std::stoi(line.substr(4));
 
-		has_been_executed[pc] = true;
-
-		switch (op)
-		{
-		case ACC:
-			acc += value;
-			pc++;
-			break;
-		case JMP:
-			pc += value;
-			break;
-		case NOP:
-			pc++;
-			break;
-		default:
-			break;
-		}
+		program.emplace_back(op_code, value);
 	}
 
-	return true;
-}
+	auto is_valid_program = [&program](int& acc)
+	{
+		std::vector<bool> has_been_executed(program.size(), false);
 
-int main(int argc, const char* argv[])
-{
-	Program program;
+		for (int pc = 0; pc < program.size(); )
+		{
+			const auto& [op_code, value] = program[pc];
 
-	std::string op;
-	int value;
-	while (std::cin >> op, std::cin >> value)
-		program.emplace_back(op_codes.find(op)->second, value);
+			if (has_been_executed[pc])
+				return false;
+
+			has_been_executed[pc] = true;
+
+			switch (op_code)
+			{
+			case op_code_e::acc:
+				acc += value;
+				pc++;
+				break;
+			case op_code_e::jmp:
+				pc += value;
+				break;
+			case op_code_e::nop:
+				pc++;
+				break;
+			default:
+				break;
+			}
+		}
+
+		return true;
+	};
+
 
 	for (auto& [op, _] : program)
 	{
-		if (op == JMP)
+		if (op == op_code_e::jmp)
 		{
-			op = NOP;
+			op = op_code_e::nop;
 
-			int acc;
-			if (is_valid_program(program, acc))
+			if (int acc{}; is_valid_program(acc))
 			{
 				std::cout << acc;
 				break;
 			}
 
-			op = JMP;
+			op = op_code_e::jmp;
 		}
-		else if (op == NOP)
+		else if (op == op_code_e::nop)
 		{
-			op = JMP;
+			op = op_code_e::jmp;
 
-			int acc;
-			if (is_valid_program(program, acc))
+			if (int acc{}; is_valid_program(acc))
 			{
 				std::cout << acc;
 				break;
 			}
 
-			op = NOP;
+			op = op_code_e::nop;
 		}
 	}
-
-	return 0;
 }

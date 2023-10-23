@@ -3,31 +3,33 @@
 #include <vector>
 #include <map>
 
-enum OpCode { ACC, JMP, NOP };
+enum class op_code_e { acc, jmp, nop };
 
-const std::map<std::string, OpCode> op_codes
+int main(int _, const char*[])
 {
-	{ "acc", ACC },
-	{ "jmp", JMP },
-	{ "nop", NOP }
-};
+	std::vector<std::pair<op_code_e, int>> program;
 
-using Program = std::vector<std::pair<OpCode, int>>;
+	for (std::string line; std::getline(std::cin, line); )
+	{
+		op_code_e op_code{};
+		if (line.starts_with("acc"))
+			op_code = op_code_e::acc;
+		else if (line.starts_with("jmp"))
+			op_code = op_code_e::jmp;
+		else if (line.starts_with("nop"))
+			op_code = op_code_e::nop;
+		else
+			continue;
 
-int main(int argc, const char* argv[])
-{
-	Program program;
+		const int value = std::stoi(line.substr(4));
 
-	std::string op;
-	int value;
-	while (std::cin >> op, std::cin >> value)
-		program.emplace_back(op_codes.find(op)->second, value);
+		program.emplace_back(op_code, value);
+	}
 
 	std::vector<bool> has_been_executed(program.size());
 
 	int acc = 0;
-	int pc = 0;
-	while (pc < program.size())
+	for (int pc = 0; pc < program.size(); )
 	{
 		const auto& [op, value] = program[pc];
 
@@ -38,14 +40,14 @@ int main(int argc, const char* argv[])
 
 		switch (op)
 		{
-		case ACC:
+		case op_code_e::acc:
 			acc += value;
 			pc++;
 			break;
-		case JMP:
+		case op_code_e::jmp:
 			pc += value;
 			break;
-		case NOP:
+		case op_code_e::nop:
 			pc++;
 			break;
 		default:
@@ -54,6 +56,4 @@ int main(int argc, const char* argv[])
 	}
 
 	std::cout << acc;
-
-	return 0;
 }

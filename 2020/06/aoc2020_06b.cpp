@@ -2,33 +2,25 @@
 #include <string>
 #include <algorithm> // std::count, std::fill
 
-int main(int argc, const char* argv[])
+int main(int _, const char*[])
 {
-	int responses[26] = {};
-
 	int sum = 0;
-	int people_count = 0;
 
-	std::string line;
-	while (std::getline(std::cin, line))
+	while (std::cin)
 	{
-		if (line.empty())
+		int people_count = 0;
+		int responses[26]{};
+
+		for (std::string line; std::getline(std::cin, line) && !line.empty(); )
 		{
-			sum += std::count(std::begin(responses), std::end(responses), people_count);
-			std::fill(std::begin(responses), std::end(responses), 0);
-			people_count = 0;
-			continue;
+			for (const char letter : line)
+				responses[letter - 'a']++;
+
+			people_count++;
 		}
 
-		for (const char letter : line)
-			responses[letter - 'a']++;
-		
-		people_count++;
+		sum += std::ranges::count(responses, people_count);
 	}
 
-	sum += std::count(std::begin(responses), std::end(responses), people_count);
-
 	std::cout << sum;
-
-	return 0;
 }

@@ -1,69 +1,51 @@
 #include <iostream>
 #include <set>
-#include <algorithm> // std::minmax_element
-
-using ValuesSet = std::set<int>;
-
-auto cmp_first_only = [](const auto& a, const auto& b) { return a.first < b.first; }; 
-using CmpFirstOnly = decltype(cmp_first_only);
-
-auto cmp_second_only = [](const auto& a, const auto& b) { return a.second < b.second; }; 
-using CmpSecondOnly = decltype(cmp_second_only);
-
-using SummedValuesSet = std::set<std::pair<__int64, int>, CmpFirstOnly>;
-using SummedValuesSetIt = SummedValuesSet::const_iterator;
+#include <vector>
+#include <ranges> // std::ranges::find, std::ranges::subrange, std::views::values
+#include <algorithm> // std::ranges::minmax_element
 
 constexpr int preamble = 25;
 
-bool contains_values_that_sum(const ValuesSet& values, const int sum)
+bool contains_values_that_sum(const std::set<long long>& values, const long long sum)
 {
-	for (const int a : values)
-		if (const auto b = values.find(sum - a); b != values.end())
-			return true;
-	return false;
+	return values.end() != std::ranges::find_if(values, [&](const long long a) {
+		return values.end() != values.find(sum - a);
+	});
 }
 
-bool find_contiguous_range_that_sums(const SummedValuesSet& summed_values, const __int64 target, SummedValuesSetIt& lower, SummedValuesSetIt& upper)
+int main(int _, const char*[])
 {
-	for (auto a = summed_values.begin(); a != summed_values.end(); a++)
-		if (const auto b = summed_values.find({ a->first - target, 0}); b != summed_values.end())
-		{
-			lower = b;
-			upper = a;
-			return true;
-		}
-	return false;
-}
+	std::set<long long> values;
+	std::vector<std::pair<long long, long long>> cumulative_values;
 
+	long long total = 0;
 
-int main(int argc, const char* argv[])
-{
-	ValuesSet values;
-	SummedValuesSet summed_values(cmp_first_only);
-
-	int n = 1;
-	int value;
-	__int64 total = 0;
-	while (std::cin >> value)
+	long long value;
+	for (int n = 1; std::cin >> value; n++)
 	{
 		if (n > preamble && !contains_values_that_sum(values, value))
 			break;
 
 		values.insert(value);
-
-		summed_values.emplace(total, value);
+		cumulative_values.emplace_back(value, total);
 		total += value;
-		n++;
 	}
 
-	std::cout << value << std::endl;
-
-	SummedValuesSetIt lower, upper;
-	if (find_contiguous_range_that_sums(summed_values, value, lower, upper))
+	for (auto it = cumulative_values.begin(); it != cumulative_values.end(); ++it)
 	{
-		const auto [a, b] = std::minmax_element(lower, upper, cmp_second_only);
-		std::cout << a->second + b->second;
-	}
+		const auto other_it = std::find_if(
+			cumulative_values.begin(), it,
+			[&it, &value](const auto& pair) {
+				return it->second - pair.second == value;
+			}
+		);
 
-	return 0;
+		if (other_it != it)
+		{
+			auto values = std::ranges::subrange(other_it, it) | std::views::elements<0>;
+			const auto [a, b] = std::ranges::minmax_element(values);
+			std::cout << *a + *b;
+			break;
+		}
+	}
 }

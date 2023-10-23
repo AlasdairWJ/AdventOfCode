@@ -2,29 +2,23 @@
 #include <string>
 #include <algorithm> // std::count, std::fill 
 
-int main(int argc, const char* argv[])
+int main(int _, const char*[])
 {
-	bool responses[26] = {};
-
 	int sum = 0;
 
-	std::string line;
-	while (std::getline(std::cin, line))
+	while (std::cin)
 	{
-		if (line.empty())
+		bool responses[26]{};
+		
+		for (std::string line; std::getline(std::cin, line) && !line.empty(); )
 		{
-			sum += std::count(std::begin(responses), std::end(responses), true);
-			std::fill(std::begin(responses), std::end(responses), false);
-			continue;
+			for (const char letter : line)
+				responses[letter - 'a'] = true;
 		}
 
-		for (const char letter : line)
-			responses[letter - 'a'] = true;
+		sum += std::ranges::count(responses, true);
+		std::ranges::fill(responses, false);
 	}
 
-	sum += std::count(std::begin(responses), std::end(responses), true);
-
 	std::cout << sum;
-
-	return 0;
 }
