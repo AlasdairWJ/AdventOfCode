@@ -1,37 +1,29 @@
-#include <iostream> // std::cout
-#include <string> // std::string, std::getline, std::stoi
+#include <iostream>
+#include <string> // std::getline
 #include <numeric> // std::accumulate
-#include <set> // std::set
+#include <algorithm> // std::ranges::sort
+#include <functional> // std::greater
 
-int main(int argc, const char* argv[])
+#include "../../util/charconv.hpp" // util::from_chars
+
+int main(int _, const char*[])
 {
-	std::set<int> top;
-	int current = 0;
-
-	std::string line;
-	while (std::getline(std::cin, line))
+	std::vector<int> totals;
+	
+	while (std::cin)
 	{
-		if (line.empty())
-		{
-			if (top.size() < 3)
-			{
-				top.emplace(current);
-			}
-			else if (auto it = top.begin(); current > *it)
-			{
-				top.erase(it);
-				top.emplace(current);
-			}
+		int total = 0;
 
-			current = 0;
-		}
-		else
+		for (std::string line; std::getline(std::cin, line) && !line.empty(); )
 		{
-			current += std::stoi(line);
+			if (int value{}; util::from_chars(line, value))
+				total += value;
 		}
+
+		totals.push_back(total);
 	}
 
-	std::cout << std::accumulate(top.begin(), top.end(), 0);
+	std::ranges::sort(totals, std::greater());
 
-	return 0;
+	std::cout << std::accumulate(totals.begin(), totals.begin() + 3, 0);
 }
