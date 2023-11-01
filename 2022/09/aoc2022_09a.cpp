@@ -1,28 +1,28 @@
-#include <iostream> // std::cout
-#include <string> // std::string, std::getline
-#include <utility> // std::pair
-#include <set> // std::set
+#include <iostream>
+#include <set>
 #include <cmath> // std::abs
 
-int main(int argc, const char* argv[])
+struct point
 {
-	using point = std::pair<int, int>;
+	int x, y;
 
+	auto operator<=>(const point&) const = default;
+};
+
+int main(int _, const char*[])
+{
 	point head = {};
 	auto& [head_x, head_y] = head;
 
 	point tail = {};
 	auto& [tail_x, tail_y] = tail;
 
-	std::set<point> locations { tail };
+	std::set<point> locations{ tail };
 
-	std::string line;
-	while (std::getline(std::cin, line))
+	char direction;
+	int count;
+	while (std::cin >> direction, std::cin.ignore(1), std::cin >> count)
 	{
-		char direction;
-		int count;
-		sscanf_s(line.c_str(), "%c %d", &direction, 1u, &count);
-
 		for  (int i = 0; i < count; i++)
 		{
 			switch (direction)
@@ -38,6 +38,8 @@ int main(int argc, const char* argv[])
 				break;
 			case 'D':
 				head_y++;
+				break;
+			default:
 				break;
 			}
 
@@ -61,6 +63,4 @@ int main(int argc, const char* argv[])
 	}
 
 	std::cout << locations.size();
-
-	return 0;
 }
