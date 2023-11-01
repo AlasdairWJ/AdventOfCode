@@ -1,30 +1,31 @@
-#include <iostream> // std::cout
-#include <string> // std::string, std::getline
-#include <utility> // std::pair
-#include <set> // std::set
+#include <iostream>
+#include <set>
 #include <cmath> // std::abs
 
-int main(int argc, const char* argv[])
+constexpr int N = 10;
+
+struct point
 {
-	using point = std::pair<int, int>;
+	int x, y;
 
-	point knots[10] = {};
+	auto operator<=>(const point&) const = default;
+};
 
-	point& head = knots[0];
-	auto& [head_x, head_y] = head;
+int main(int _, const char*[])
+{
+	point knots[N]{};
 
-	const point& tail = knots[9];
+	auto& [head_x, head_y] = knots[0];
+
+	const point& tail = knots[N - 1];
 	const auto& [tail_x, tail_y] = tail;
 
 	std::set<point> locations { tail };
 
-	std::string buffer;
-	while (std::getline(std::cin, buffer))
+	char direction;
+	int count;
+	while (std::cin >> direction, std::cin.ignore(1), std::cin >> count)
 	{
-		char direction;
-		int count;
-		sscanf_s(buffer.c_str(), "%c %d", &direction, 1u, &count);
-
 		for  (int i = 0; i < count; i++)
 		{
 			switch (direction)
@@ -41,9 +42,11 @@ int main(int argc, const char* argv[])
 			case 'D':
 				head_y++;
 				break;
+			default:
+				break;
 			}
 
-			for (int i = 1; i < 10; i++)
+			for (int i = 1; i < N; i++)
 			{
 				auto& [knot_x, knot_y] = knots[i];
 				const auto& [prev_knot_x, prev_knot_y] = knots[i - 1];
@@ -69,6 +72,4 @@ int main(int argc, const char* argv[])
 	}
 
 	std::cout << locations.size();
-
-	return 0;
 }

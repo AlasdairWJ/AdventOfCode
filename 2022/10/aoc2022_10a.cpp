@@ -1,38 +1,38 @@
-#include <iostream> // std::cout
-#include <string> // std::string, std::getline
+#include <iostream>
+#include <string> // std::getline
 #include <regex> // std::regex, std::smatch, std::match_regex
 
-int main(int argc, const char* argv[])
-{
-	int rgstr = 1;
+#include "../../util/charconv.hpp" // util::from_chars
 
+const std::regex instruction_re{ "^(addx|noop) ?(.+)?$" };
+
+constexpr int key_cycles[]{
+	20,
+	60,
+	100,
+	140,
+	180,
+	220
+};
+
+int main(int _, const char*[])
+{
 	int signal_strength_sum = 0;
 
+	int rgstr = 1;
 	int key_id = 0;
-	const int key_cycles[] {
-		20,
-		60,
-		100,
-		140,
-		180,
-		220
-	};
-
 	int cycle = 1;
-	std::string line;
-	while (std::getline(std::cin, line))
+	
+	for (std::string line; std::getline(std::cin, line); )
 	{
-		static const std::regex instruction_pattern{"^(addx|noop)(?: (\\-?\\d+))?$"};
-
-		std::smatch instruction_match;
-		if (std::regex_match(line, instruction_match, instruction_pattern))
+		if (std::smatch match; std::regex_match(line, match, instruction_re))
 		{
 			int operand = 0;
 			int op_cycles = 1;
 
-			if (instruction_match.str(1) == "addx")
+			if (match.str(1) == "addx")
 			{
-				operand = std::stoi(instruction_match.str(2));
+				util::from_chars(match[2], operand);
 				op_cycles = 2;
 			}
 
@@ -50,6 +50,4 @@ int main(int argc, const char* argv[])
 	}
 
 	std::cout << signal_strength_sum;
-
-	return 0;
 }

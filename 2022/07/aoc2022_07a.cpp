@@ -1,28 +1,27 @@
-#include <iostream> // std::cout
-#include <string> // std::string, std::getline
-#include <map> // std::map
-#include <vector> // std::vector
-#include <regex> // std::regex, std::smatch, std::regex_match
-#include <ranges> // std::views::transform, std::views::filter
+#include <iostream>
+#include <string> // std::getline
+#include <map>
+#include <vector>
+#include <regex> // std::regex_match
+#include <ranges> // std::views::views, std::views::filter
 #include <numeric> // std::accumulate
 
-int main(int argc, const char* argv[])
+const std::regex command_re{ "^\\$ (\\w+)(?: (.+))?$" };
+const std::regex file_re{ "^(\\d+|dir) (.+)$" };
+
+int main(int _, const char*[])
 {
-	std::string current_path = "";
+	std::string current_path{};
 
 	std::map<std::vector<std::string>, int> folder_sizes;
 	std::vector<std::string> current_folder_stack;
 
 	bool needs_next_line = true;
-	std::string line;
-	while (needs_next_line ? std::getline(std::cin, line) : std::cin)
+	for (std::string line; needs_next_line ? std::getline(std::cin, line) : std::cin; )
 	{
 		needs_next_line = true;
 
-		static const std::regex command_pattern{"^\\$ (\\w+)(?: (.+))?$"};
-
-		std::smatch command_match;
-		if (std::regex_match(line, command_match, command_pattern))
+		if (std::smatch command_match; std::regex_match(line, command_match, command_pattern))
 		{
 			const auto command = command_match.str(1);
 			if (command == "cd")
@@ -45,19 +44,13 @@ int main(int argc, const char* argv[])
 			{
 				while (std::getline(std::cin, line) && line.front() != '$')
 				{
-					static const std::regex file_pattern{ "^(\\d+|dir) (.+)$" };
-
-					std::smatch file_match;
-					if (std::regex_match(line, file_match, file_pattern))
+					if (std::smatch file_match; std::regex_match(line, file_match, file_re))
 					{
-						const auto size_param = file_match.str(1);
-
-						if (size_param != "dir")
+						const auto size_or_dir = file_match.str(1);
+						if (size_or_dir != "dir")
 						{
-							const int size = std::stoi(size_param);
-
-							auto folder_stack = current_folder_stack;
-							while (!folder_stack.empty())
+							const int size = std::stoi(size_or_dir);
+							for (auto folder_stack = current_folder_stack; !folder_stack.empty(); )
 							{
 								folder_sizes[folder_stack] += size;
 								folder_stack.pop_back();
@@ -71,12 +64,9 @@ int main(int argc, const char* argv[])
 		}
 	}
 
-	const auto less_than_100k = [](int x) { return x < 100'000; };
+	auto less_than_100k = [](int x) { return x < 100'000; };
 
 	auto values = folder_sizes | std::views::values | std::views::filter(less_than_100k);
 
-	std::cout<< std::accumulate(values.begin(), values.end(), 0);
-
-
-	return 0;
+	std::cout << std::accumulate(values.begin(), values.end(), 0);
 }

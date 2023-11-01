@@ -1,69 +1,41 @@
-#include <iostream> // std::cout
-#include <string> // std::string, std::getline
-#include <vector> // std::vector
-#include <numeric> // std::accumulate
+#include <iostream>
+#include <string> // std::getline
+#include <vector>
+#include <algorithm> // std::ranges::count
 
-int main(int argc, const char* argv[])
+int main(int _, const char*[])
 {
 	std::vector<std::string> heights;
 
-	std::string line;
-	while (std::getline(std::cin, line))
+	for (std::string line; std::getline(std::cin, line); )
 		heights.push_back(line);
 
-	const int row_count = heights.size();
-	const int col_count = heights.front().size();
-	const int tree_count = row_count * col_count;
+	// assume square
+	const int size = static_cast<int>(heights.size());
+	const int tree_count = size * size;
 
 	std::vector<bool> visible(tree_count);
 
-	for (int row = 0; row < row_count; row++)
+	auto check = [&](int x, int y, const int dx, const int dy)
 	{
 		char max = 0;
-		for (int col = 0; col < col_count; col++)
+		for (int i = 0; i < size; i++, x += dx, y += dy)
 		{
-			if (const char height = heights[row][col]; height > max)
+			if (const char height = heights[y][x]; height > max)
 			{
 				max = height;
-				visible[row * col_count + col] = true;
+				visible[y * size + x] = true;
 			}
 		}
+	};
 
-		max = 0;
-		for (int col = col_count - 1; col >= 0; col--)
-		{
-			if (const char height = heights[row][col]; height > max)
-			{
-				max = height;
-				visible[row * col_count + col] = true;
-			}
-		}
-	}
-
-	for (int col = 0; col < col_count; col++)
+	for (int i = 0; i < size; i++)
 	{
-		char max = 0;
-		for (int row = 0; row < row_count; row++)
-		{
-			if (const char height = heights[row][col]; height > max)
-			{
-				max = height;
-				visible[row * col_count + col] = true;
-			}
-		}
-
-		max = 0;
-		for (int row = row_count - 1; row >= 0; row--)
-		{
-			if (const char height = heights[row][col]; height > max)
-			{
-				max = height;
-				visible[row * col_count + col] = true;
-			}
-		}
+		check(i,		0,			0,	1);
+		check(i,		size - 1,	0,	-1);
+		check(0,		i,			1,	0);
+		check(size - 1, i,			-1,	0);
 	}
 
-	std::cout << std::accumulate(visible.begin(), visible.end(), 0);
-
-	return 0;
+	std::cout << std::ranges::count(visible, true);
 }

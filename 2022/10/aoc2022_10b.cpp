@@ -1,39 +1,41 @@
-#include <iostream> // std::cout
-#include <string> // std::string, std::getline
-#include <regex> // std::regex, std::smatch, std::match_regex
+#include <iostream>
+#include <string> // std::getline
+#include <regex> // std::regex, std::smatch, std::match_regexc
+#include <ranges> // std::views::join
 
-int main(int argc, const char* argv[])
+#include "../../util/charconv.hpp" // util::from_chars
+
+const std::regex instruction_re{ "^(addx|noop) ?(.+)?$" };
+
+constexpr int N = 40;
+
+int main(int _, const char*[])
 {
 	int rgstr = 1;
 	int cycle = 0;
-	char display[6][41] = {};
+	char display[6][N]{};
 
-	for (auto& row : display)
-		std::fill(row, row + 40, ' ');
+	std::ranges::fill(display | std::views::join, ' ');
 
-	std::string line;
-	while (std::getline(std::cin, line))
+	for (std::string line; std::getline(std::cin, line); )
 	{
-		static const std::regex instruction_pattern{ "^(addx|noop)(?: (\\-?\\d+))?$" };
-
-		std::smatch instruction_match;
-		if (std::regex_match(line, instruction_match, instruction_pattern))
+		if (std::smatch match; std::regex_match(line, match, instruction_re))
 		{
 			int operand = 0;
 			int op_cycles = 1;
 
-			if (line[0] == 'a')
+			if (match.str(1) == "addx")
 			{
-				operand = std::stoi(line.substr(5));
+				util::from_chars(match[2], operand);
 				op_cycles = 2;
 			}
 
 			for (int i = 0; i < op_cycles; i++, cycle++)
 			{
-				const int c = cycle % 40;
+				const int c = cycle % N;
 				if (rgstr - 1 <= c && c <= rgstr + 1)
 				{
-					const int r = cycle / 40;
+					const int r = cycle / N;
 					display[r][c] = '#';
 				}
 			}
@@ -43,7 +45,5 @@ int main(int argc, const char* argv[])
 	}
 
 	for (const auto& row : display)
-		std::cout << row << '\n';
-
-	return 0;
+		std::cout.write(row, N) << '\n';
 }

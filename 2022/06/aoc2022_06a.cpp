@@ -1,17 +1,17 @@
-#include <iostream> // std::cout
-#include <string> // std::string, std::getline
-#include <set> // std::set
+#include <iostream>
+#include <string> // std::getline
+#include <set>
 
-int main(int argc, const char* argv[])
+constexpr int N = 4;
+
+int main(int _, const char*[])
 {
 	std::string line;
 	std::getline(std::cin, line);
 
 	int i = 0;
-	while (std::set<char>(&line[i], &line[i] + 4).size() < 4)
+	while (std::set<char>(&line[i], &line[i] + N).size() < N)
 		i++;
 
-	std::cout << i + 4;
-
-	return 0;
+	std::cout << i + N;
 }
