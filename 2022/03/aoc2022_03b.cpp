@@ -1,38 +1,41 @@
-#include <iostream> // std::cout
-#include <string> // std::string, std::getline
-#include <set> // std::set
+#include <iostream>
+#include <string> // std::getline
+#include <set>
 #include <algorithm> // std::set_intersection
 #include <iterator> // std::inserter
 #include <cctype> // std::islower
 
-int main(int argc, const char* argv[])
+template <typename T>
+auto set_intersection(auto && r1, auto && r2)
+{
+	std::set<T> ix;
+	std::ranges::set_intersection(r1, r2, std::inserter(ix, ix.begin()));
+	return ix;
+}
+
+int main(int _, const char*[])
 {
 	int priority_sum = 0;
 
-	std::string line_a, line_b, line_c;
-	while (std::getline(std::cin, line_a),
-		   std::getline(std::cin, line_b),
-		   std::getline(std::cin, line_c))
+	std::string lines[3];
+	while (std::getline(std::cin, lines[0]) && std::getline(std::cin, lines[1]) && std::getline(std::cin, lines[2]))
 	{
-		const std::set<char> a(line_a.begin(), line_a.end()),
-							 b(line_b.begin(), line_b.end()),
-							 c(line_c.begin(), line_c.end());
+		std::ranges::sort(lines[0]);
+		std::ranges::sort(lines[1]);
+		std::ranges::sort(lines[2]);
 
-		std::set<char> d;
-		std::set_intersection(a.begin(), a.end(),
-							  b.begin(), b.end(),
-							  std::inserter(d, d.begin()));
+		const auto letters = set_intersection<char>(
+			set_intersection<char>(
+				lines[0],
+				lines[1]
+			),
+			lines[2]
+		);
 
-		std::set<char> e;
-		std::set_intersection(c.begin(), c.end(),
-							  d.begin(), d.end(),
-							  std::inserter(e, e.begin()));
+		const char letter = *letters.begin();
 
-		const char letter = *e.begin();
-		priority_sum += islower(letter) ? (letter - 'a' + 1) : (letter - 'A' + 27);
+		priority_sum += std::islower(letter) ? int{ letter - 'a' + 1 } : int{ letter - 'A' + 27 };
 	}
 
 	std::cout << priority_sum;
-
-	return 0;
 }

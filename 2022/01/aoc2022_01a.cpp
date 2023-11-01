@@ -1,29 +1,25 @@
-#include <iostream> // std::cout
-#include <string> // std::string, std::getline, std::stoi
+#include <iostream>
+#include <string> // std::getline
 
-int main(int argc, const char* argv[])
+#include "../../util/charconv.hpp" // util::from_chars
+
+int main(int _, const char*[])
 {
-	int current = 0, best_so_far = 0;
+	int best = 0;
 
-	std::string line;
-	while (std::getline(std::cin, line))
+	while (std::cin)
 	{
-		if (line.empty())
-		{
-			if (best_so_far == 0 || current > best_so_far)
-			{
-				best_so_far = current;
-			}
+		int total = 0;
 
-			current = 0;
-		}
-		else
+		for (std::string line; std::getline(std::cin, line) && !line.empty(); )
 		{
-			current += std::stoi(line);
+			if (int value{}; util::from_chars(line, value))
+				total += value;
 		}
+
+		if (best == 0 || total > best)
+			best = total;
 	}
 
-	std::cout << best_so_far;
-
-	return 0;
+	std::cout << best;
 }

@@ -1,20 +1,32 @@
-#include <iostream> // std::cout
-#include <string> // std::string, std::getline
+#include <iostream>
+#include <string> // std::getline
+#include <regex> // std::regex_match
 
-int main(int argc, const char* argv[])
+#include "../../util/charconv.hpp" // util::from_chars
+
+const std::regex ranges_re{ "^(\\d+)-(\\d+),(\\d+)-(\\d+)$" };
+
+int main(int _, const char*[])
 {
 	int count = 0;
 
-	std::string line;
-	while (std::getline(std::cin, line))
+	for (std::string line; std::getline(std::cin, line); )
 	{
-		int lower1, upper1, lower2, upper2;
-		sscanf_s(line.c_str(), "%d-%d,%d-%d", &lower1, &upper1, &lower2, &upper2);
-		count += (lower1 <= lower2 && upper2 <= upper1) ||
-				 (lower2 <= lower1 && upper1 <= upper2);
+		if (std::smatch match; std::regex_match(line, match, ranges_re))
+		{
+			int lower1, upper1, lower2, upper2;
+			util::from_chars(match[1], lower1);
+			util::from_chars(match[2], upper1);
+			util::from_chars(match[3], lower2);
+			util::from_chars(match[4], upper2);
+
+			if ((lower1 <= lower2 && upper2 <= upper1) ||
+				(lower2 <= lower1 && upper1 <= upper2))
+			{
+				count++;
+			}
+		}
 	}
 
 	std::cout << count;
-
-	return 0;
 }
