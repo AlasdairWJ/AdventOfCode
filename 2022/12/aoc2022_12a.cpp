@@ -1,94 +1,101 @@
-#include <iostream> // std::cout
-#include <string> // std::string, std::getline
-#include <vector> // std::vector
-#include <utility> // std::pair
-#include <set> // std::set
+#include <iostream>
+#include <string> // std::getline
+#include <vector>
+#include <utility>
+#include <set>
 
-int main(int argc, const char* argv[])
+struct Point
+{
+	int x, y;
+
+	auto operator<=>(const Point&) const = default;
+};
+
+int main(int _, const char*[])
 {
 	std::vector<std::string> rows;
 
-	using point = std::pair<int, int>;
-	point start, target;
+	Point start, target;
 
-	std::string line;
-	std::getline(std::cin, line);
+	for (std::string line; std::getline(std::cin, line); )
+		rows.push_back(line);
 
-	const int width = line.size();
+	const int width = static_cast<int>(rows.front().size());
+	const int height = static_cast<int>(rows.size());
 
-	do
+	for (Point p{}; auto& row : rows)
 	{
-		for (int i = 0; i < width; i++)
+		for (p.x = 0; char& c : row)
 		{
-			if (char& c = line[i]; c == 'S')
+			switch (c)
 			{
+			case 'S':
 				c = 'a';
-				start = point{ i, static_cast<int>(rows.size()) };
-			}
-			else if (c == 'E')
-			{
+				start = p;
+				break;
+			case 'E':
 				c = 'z';
-				target = point{ i, static_cast<int>(rows.size()) };
+				target = p;
+				break;
+			default:
+				break;
 			}
+
+			p.x++;
 		}
 
-		rows.push_back(line);
+		p.y++;
 	}
-	while (std::getline(std::cin, line));
 
-	const int height = rows.size();
+	std::vector<int8_t> data(width * height);
 
-	const auto visited = [&](const point& p) -> int8_t&
+	auto visited = [&](const Point& p) -> int8_t&
 	{
-		static std::vector<int8_t> data(width * height);
-		return data.at(p.second * width + p.first);
+		return data.at(p.y * width + p.x);
 	};
 
-	const auto at = [&](const point& p) -> char
+	auto at = [&](const Point& p) -> char
 	{
-		return rows[p.second][p.first];
+		return rows[p.y][p.x];
 	};
 
 	visited(start) = true;
 
 	int steps = 0;
 
-	for (std::set<point> current{ start };
-		 !current.empty() && current.find(target) == current.end();
-		 steps++)
+	for (std::set<Point> current{ start }; !current.contains(target); steps++)
 	{
-		std::set<point> next;
+		std::set<Point> next;
 
 		for (const auto& p : current)
 		{
-			const auto& [x, y] = p;
 			const char c = at(p);
 
-			if (x > 0)
+			if (p.x > 0)
 			{
-				const point left{ x - 1, y };
-				if (int& v = visited(left); !v && at(left) <= c + 1)
+				const Point left{ p.x - 1, p.y };
+				if (auto& v = visited(left); !v && at(left) <= c + 1)
 					next.insert(left), v = true;
 			}
 
-			if (x < width - 1)
+			if (p.x < width - 1)
 			{
-				const point right{ x + 1, y };
-				if (int& v = visited(right); !v && at(right) <= c + 1)
+				const Point right{ p.x + 1, p.y };
+				if (auto& v = visited(right); !v && at(right) <= c + 1)
 					next.insert(right), v = true;
 			}
 
-			if (y > 0)
+			if (p.y > 0)
 			{
-				const point above{ x, y - 1 };
-				if (int& v = visited(above); !v && at(above) <= c + 1)
+				const Point above{ p.x, p.y - 1 };
+				if (auto& v = visited(above); !v && at(above) <= c + 1)
 					next.insert(above), v = true;
 			}
 
-			if (y < height - 1)
+			if (p.y < height - 1)
 			{
-				const point below{ x, y + 1 };
-				if (int& v = visited(below); !v && at(below) <= c + 1)
+				const Point below{ p.x, p.y + 1 };
+				if (auto& v = visited(below); !v && at(below) <= c + 1)
 					next.insert(below), v = true;
 			}
 		}
@@ -97,6 +104,4 @@ int main(int argc, const char* argv[])
 	}
 
 	std::cout << steps;
-
-	return 0;
 }
