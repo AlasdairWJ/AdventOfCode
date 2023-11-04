@@ -3,7 +3,9 @@
 
 Hello!
 
-All solutions are written in c++, some solutiosn will require c++17/20 to compile.
+All solutions are written in c++, and make liberal use of modern c++20 language and library features - I use these problems as a test bed for modern standards.
+
+--
 
 Solutions are designed to take input from file redirection, for example, to run 2021a:
 
