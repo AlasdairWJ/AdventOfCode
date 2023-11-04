@@ -1,133 +1,165 @@
-#include <iostream> // std::cout
-#include <string> // std::string, std::getline
-#include <vector> //std::vector
-#include <stack> // std::stack
-#include <regex> // std::regex, std::sregex_token_iterator
-#include <set> // std::set
+#include <iostream>
+#include <string> // std::getline
+#include <vector>
+#include <regex> // std::sregex_token_iterator
+#include <compare>
+#include <set>
 
-int compare(const int a, const int b) { return (a < b) - (a > b); }
+#include "../../util/charconv.hpp" // util::from_chars
 
-enum class token_e
+const std::regex tokens_re{ "\\[|\\]|\\d+" };
+
+struct Token
 {
-	number,
-	list_start,
-	list_end
-};
-
-struct token_t
-{
-	token_e type;
+	enum class Type { ListStart, ListEnd, Number } type;
 	int number;
 	int range;
 };
 
-std::vector<token_t> parse_tokens(const std::string& text)
+using TokenList = std::vector<Token>;
+using TokenIt = TokenList::const_iterator;
+
+TokenList parse_tokens(const std::string& text)
 {
-	std::vector<token_t> tokens;
-	std::stack<int> ranges;
+	TokenList tokens;
+	std::vector<int> ranges;
 
-	const std::regex tokens_pattern{ "\\[|\\]|\\d+" };
-
-	const auto begin = std::sregex_token_iterator(text.begin(), text.end(), tokens_pattern);
+	const auto begin = std::sregex_token_iterator(text.begin(), text.end(), tokens_re);
 	const auto end = std::sregex_token_iterator();
 
 	int n = 0;
 	for (auto it = begin; it != end; ++it, n++)
 	{
-		if (const std::string token = it->str(); token == "[")
+		if (const auto token_str = it->str(); token_str == "[")
 		{
-			ranges.push(n);
-			tokens.push_back({ token_e::list_start, 0, 1 });
+			ranges.push_back(n);
+
+			tokens.emplace_back(Token::Type::ListStart, 0, 1);
 		}
-		else if (token == "]")
+		else if (token_str == "]")
 		{
-			tokens[ranges.top()].range = n - ranges.top() + 1;
-			ranges.pop();
-			tokens.push_back({ token_e::list_end, 0, 1 });
+			tokens[ranges.back()].range = n - ranges.back() + 1;
+			ranges.pop_back();
+
+			tokens.emplace_back(Token::Type::ListEnd, 0, 1);
 		}
 		else
 		{
-			tokens.push_back({ token_e::number, std::stoi(token), 1 });
+			auto& token = tokens.emplace_back(Token::Type::Number, 0, 1);
+			util::from_chars(token_str, token.number);
 		}
 	}
 
 	return tokens;
 }
 
-using iterator = std::vector<token_t>::const_iterator;
+using ordering = std::strong_ordering;
 
-int compare(iterator left, iterator right)
+ordering compare(TokenIt left, TokenIt right)
 {
-	if (left->type == token_e::number && right->type == token_e::number)
-		return compare(left->number, right->number);
+	if (left->type == Token::Type::Number && right->type == Token::Type::Number)
+		return left->number <=> right->number;
 
-	if (left->type == token_e::list_start && right->type == token_e::number)
+	if (left->type == Token::Type::ListStart && right->type == Token::Type::Number)
 	{
-		do left++;
-		while (left->type == token_e::list_start);
+		int nest_count = 0;
 
-		if (left->type == token_e::list_end)
-			return 1;
-
-		const int result = compare(left->number, right->number);
-
-		if (result != 0)
-			return result;
-
-		left++;
-
-		return left->type == token_e::list_end ? 0 : -1;
-	}
-
-	if (left->type == token_e::number && right->type == token_e::list_start)
-	{
-		do right++;
-		while (right->type == token_e::list_start);
-
-		if (right->type == token_e::list_end)
-			return -1;
-
-		const int result = compare(left->number, right->number);
-
-		if (result != 0)
-			return result;
-
-		right++;
-
-		return right->type == token_e::list_end ? 0 : 1;
-	}
-
-	if (left->type == token_e::list_start && right->type == token_e::list_start)
-	{
-		for (auto l2 = left + 1, r2 = right + 1;
-			 l2->type != token_e::list_end || r2->type != token_e::list_end;
-			 l2 += l2->range, r2 += r2->range)
+		do
 		{
-			if (l2->type == token_e::list_end)
-				return 1;
+			++left;
+			nest_count++;
+		}
+		while (left->type == Token::Type::ListStart);
 
-			if (r2->type == token_e::list_end)
-				return -1;
+		if (left->type == Token::Type::ListEnd)
+			return ordering::less;
 
-			const int result = compare(l2, r2);
-			if (result != 0)
-				return result;
+		if (const auto result = left->number <=> right->number; result != 0)
+			return result;
+
+		for (; nest_count > 0; nest_count--)
+		{
+			++left;
+
+			if (left->type != Token::Type::ListEnd)
+				return ordering::greater;
 		}
 
-		return 0;
+		return ordering::equal;
 	}
 
-	throw "??";
+	if (left->type == Token::Type::Number && right->type == Token::Type::ListStart)
+	{
+		int nest_count = 0;
+
+		do
+		{
+			++right;
+			nest_count++;
+		}
+		while (right->type == Token::Type::ListStart);
+
+		if (right->type == Token::Type::ListEnd)
+			return ordering::greater;
+
+		if (const auto result = left->number <=> right->number; result != 0)
+			return result;
+
+		for (; nest_count > 0; nest_count--)
+		{
+			++right;
+
+			if (right->type != Token::Type::ListEnd)
+				return ordering::less;
+		}
+
+		return ordering::equal;
+	}
+
+	if (left->type == Token::Type::ListStart && right->type == Token::Type::ListStart)
+	{
+		++left;
+		++right;
+
+		while (left->type != Token::Type::ListEnd || right->type != Token::Type::ListEnd)
+		{
+			if (left->type == Token::Type::ListEnd)
+				return ordering::less;
+
+			if (right->type == Token::Type::ListEnd)
+				return ordering::greater;
+
+			if (const auto result = compare(left, right); result != 0)
+				return result;
+
+			left += left->range, right += right->range;
+		}
+		
+		return ordering::equal;
+	}
+
+	return ordering::equal; // should never reach
 }
 
-int main(int argc, const char* argv[])
+int main(int _, const char*[])
 {
-	const auto sort_packets = [](const auto& left, const auto& right)
+	const auto sort_packets = [](const TokenList& left, const TokenList& right)
 	{
-		return compare(left.begin(), right.begin()) > 0;
+		return compare(left.begin(), right.begin()) < 0;
 	};
 
-	std::set<std::vector<token_t>, decltype(sort_packets)> all_packets;
+	std::set<TokenList, decltype(sort_packets)> all_packets;
+
+	for (std::string line; std::getline(std::cin, line); )
+	{
+		all_packets.insert(parse_tokens(line));
+
+		std::getline(std::cin, line);
+		all_packets.insert(parse_tokens(line));
+
+		// ignore nl
+		std::getline(std::cin, line);
+	}
 
 	const auto packet2 = parse_tokens("[[2]]");
 	all_packets.insert(packet2);
@@ -135,20 +167,8 @@ int main(int argc, const char* argv[])
 	const auto packet6 = parse_tokens("[[6]]");
 	all_packets.insert(packet6);
 
-	std::string buffer;
-	while (std::getline(std::cin, buffer))
-	{
-		all_packets.insert(parse_tokens(buffer));
+	const auto packet2_n = std::distance(all_packets.begin(), all_packets.find(packet2)) + 1;
+	const auto packet6_n = std::distance(all_packets.begin(), all_packets.find(packet6)) + 1; // currently off by 1
 
-		std::getline(std::cin, buffer);
-		all_packets.insert(parse_tokens(buffer));
-
-		// ignore nl
-		std::getline(std::cin, buffer);
-	}
-
-	std::cout << (std::distance(all_packets.begin(), all_packets.find(packet2)) + 1) *
-				 (std::distance(all_packets.begin(), all_packets.find(packet6)) + 1);
-
-	return 0;
+	std::cout << packet2_n * packet6_n;
 }
