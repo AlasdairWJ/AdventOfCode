@@ -77,6 +77,7 @@ int main(int argc, const char* argv[])
 			{
 				const point right{ x + 1, y };
 				if (int& v = visited(right);  !v && at(right) <= c + 1)
+				if (auto& v = visited(right);  !v && at(right) <= c + 1)
 					next.insert(right), v = true;
 			}
 
