@@ -1,113 +1,119 @@
-#include <iostream> // std::cout
-#include <string> // std::string, std::getline
-#include <vector> //std::vector
-#include <regex> // std::regex, std::smatch, std::regex_match
-#include <optional> // std::optional
-#include <algorithm> // std::sort
+#include <iostream>
+#include <string> // std::getline
+#include <vector>
+#include <regex>
+#include <optional>
+#include <algorithm> // std::ranges::sort
+#include <ranges> // std::ranges::subrange, std::views::reverse
+#include <type_traits>
 
+#include "../../util/charconv.hpp" // util::from_chars
+
+const std::regex monkey_id_re{ "^Monkey (\\d+):$"};
+const std::regex starting_items_re{ "^\\s+Starting items: (.*)$"};
+const std::regex operation_re{ "^\\s+Operation: new = (.+) ([+*]) (.+)$"};
+const std::regex test_divisible_re{ "^\\s+Test: divisible by (\\d+)$"};
+const std::regex outcome_re{ "^\\s+If .+: throw to monkey (\\d+)$"};
+
+constexpr int rounds = 10'000;
+
+template <std::integral T>
 struct Monkey
 {
 	int id;
 
-	std::vector<__int64> items;
+	std::vector<T> items;
 
-	std::optional<__int64> first_operand;
+	std::optional<T> first_operand;
 	char operation;
-	std::optional<__int64> second_operand;
+	std::optional<T> second_operand;
 
-	__int64 test_value;
+	T test_value;
 
-	int target_if_true;
-	int target_if_false;
+	int targets[2];
 
-	__int64 operate(const __int64 old_value) const
+	T operate(const T old_value) const
 	{
-		const __int64 a = first_operand.value_or(old_value);
-		const __int64 b = second_operand.value_or(old_value);
+		const T a = first_operand.value_or(old_value);
+		const T b = second_operand.value_or(old_value);
 		switch (operation)
 		{
 		case '+': return a + b;
 		case '*': return a * b;
-		default: return 0;
+		default: return T{};
 		}
 	}
 
-	int target_of(__int64 item) const
+	int target_of(const T item) const
 	{
-		return (item % test_value == 0) ? target_if_true : target_if_false;
+		return targets[item % test_value == 0];
 	}
 };
 
-int main(int argc, const char* argv[])
+int main(int _, const char*[])
 {
-	std::vector<Monkey> monkeys;
+	std::vector<Monkey<long long>> monkeys;
 
-	__int64 modulo = 1;
+	long long modulo = 1;
 
-	std::string line;
-	while (std::getline(std::cin, line))
+	for (std::string line; std::getline(std::cin, line); )
 	{
-		Monkey monkey;
+		auto& monkey = monkeys.emplace_back();
 
 		// Id
-
-		sscanf_s(line.c_str(), "Monkey %d:", &monkey.id);
+		std::smatch match;
+		std::regex_match(line, match, monkey_id_re);
+		util::from_chars(match[1], monkey.id);
 
 		// Starting Items
-
 		std::getline(std::cin, line);
-
-		static const std::regex starting_items_pattern{ "\\d+(?=, |$)" };
-
-		const auto starting_items_begin = std::sregex_iterator(line.begin(), line.end(), starting_items_pattern);
-		const auto starting_items_end = std::sregex_iterator();
-
-		auto to_int = [](const auto match) { return std::stoi(match.str()); };
-
-		const auto items = std::ranges::subrange(begin, end) | std::views::transform(to_int);
-
-		monkey.items.assign(items.begin(), items.end());
-
-		// Operation
-
-		static const std::regex operation_pattern{ "^  Operation: new = (\\d+|old) (\\+|\\*) (\\d+|old)$" };
-
-		std::getline(std::cin, line);
-
-		std::smatch match;
-		if (std::regex_match(line, match, operation_pattern))
+		std::regex_match(line, match, starting_items_re);
+		for (auto && r : match.str(1) | std::views::split(std::string{ ", " }))
 		{
-			if (match.str(1) != "old") monkey.first_operand = std::stoi(match.str(1));
-			monkey.operation = match.str(2).front();
-			if (match.str(3) != "old") monkey.second_operand = std::stoi(match.str(3));
+			if (int value; util::from_chars(r, value))
+				monkey.items.push_back(value);
 		}
 
-		// Test
-
+		// Operation
 		std::getline(std::cin, line);
-		sscanf_s(line.c_str(), "  Test: divisible by %lld", &monkey.test_value);
+		std::regex_match(line, match, operation_re);
+
+		if (const auto first_op = match.str(1); first_op != "old")
+			monkey.first_operand = std::stoi(first_op);
+
+		monkey.operation = *match[2].first;
+		
+		if (const auto second_op = match.str(3); second_op != "old")
+			monkey.second_operand = std::stoi(second_op);
+
+		// Test
+		std::getline(std::cin, line);
+		std::regex_match(line, match, test_divisible_re);
+		util::from_chars(match[1], monkey.test_value);
 
 		modulo *= monkey.test_value;
 
+		// If true
 		std::getline(std::cin, line);
-		sscanf_s(line.c_str(), "    If true: throw to monkey %d", &monkey.target_if_true);
+		std::regex_match(line, match, outcome_re);
+		util::from_chars(match[1], monkey.targets[true]);
+
+		// If false
+		std::getline(std::cin, line);
+		std::regex_match(line, match, outcome_re);
+		util::from_chars(match[1], monkey.targets[false]);
 
 		std::getline(std::cin, line);
-		sscanf_s(line.c_str(), "    If false: throw to monkey %d", &monkey.target_if_false);
-
-		std::getline(std::cin, line);
-
-		monkeys.push_back(monkey);
 	}
 
-	std::vector<int> inspection_counts(monkeys.size());
-	for (int round = 0; round < 10'000; round++)
+	std::vector<long long> inspection_counts(monkeys.size());
+	for (int round = 0; round < rounds; round++)
 	{
 		for (auto& monkey : monkeys)
 		{
 			inspection_counts[monkey.id] += monkey.items.size();
 
-			for (__int64 item : monkey.items)
+			for (long long item : monkey.items)
 			{
 				item = monkey.operate(item) % modulo;
 				const int target = monkey.target_of(item);
@@ -118,9 +124,7 @@ int main(int argc, const char* argv[])
 		}
 	}
 
-	std::sort(inspection_counts.rbegin(), inspection_counts.rend());
+	std::ranges::sort(inspection_counts | std::views::reverse);
 
-	std::cout << (__int64)inspection_counts[0] * inspection_counts[1];
-
-	return 0;
+	std::cout << inspection_counts[0] * inspection_counts[1];
 }
