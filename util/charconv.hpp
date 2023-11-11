@@ -5,16 +5,12 @@
 #include <ranges>
 #include <utility>
 
+#include "concepts.hpp"
+
 namespace util
 {
 
-template <typename R>
-concept Stringy = std::ranges::contiguous_range<R> && std::is_same_v<std::ranges::range_value_t<R>, char>;
-
-template <typename T>
-concept Number = std::is_arithmetic_v<T>;
-
-bool from_chars(Stringy auto && r, Number auto& value)
+bool from_chars(String auto && r, Number auto& value)
 {
 	const char* data = std::ranges::data(r);
 	return std::from_chars(data, data + std::ranges::size(r), value).ec == std::errc{};
