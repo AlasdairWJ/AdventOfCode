@@ -1,12 +1,12 @@
 #ifndef __UTIL_NUMERIC_HPP
 #define __UTIL_NUMERIC_HPP
 
-#include <type_traits>
+#include "concepts.hpp"
 
 namespace util
 {
 
-template <typename T> requires (std::is_arithmetic_v<T>)
+template <Number T>
 int sign(const T& val) { return (T{} < val) - (val < T{}); }
 
 } // util
