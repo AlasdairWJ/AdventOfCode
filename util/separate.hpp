@@ -1,45 +1,45 @@
-#ifndef __SEPARATE_HPP
-#define __SEPARATE_HPP
+#ifndef __UTIL_SEPARATE_HPP
+#define __UTIL_SEPARATE_HPP
 
 #include <string_view>
-#include <algorithm>
-#include "concepts.hpp"
+#include <array>
 
 namespace util
 {
 
-struct separate_result
+namespace
 {
-	std::string_view left, right;
-};
-
-separate_result separate(const String auto& text, const char separator = ' ')
+template <std::size_t N, std::size_t I = 0>
+void _separate(const std::string_view text, const std::string_view separator, std::array<std::string_view, N>& values)
 {
-	const auto it = std::ranges::find(text, separator);
-	const auto end = std::ranges::end(text);
+	const std::size_t ix = text.find(separator);
+	values[I] = text.substr(0, ix);
 
-	return separate_result{
-		std::string_view{ std::ranges::begin(text), it },
-		std::string_view{ it != end ? it + 1 : it, end }
-	};
+	if (ix != std::string_view::npos)
+	{
+		if (const std::size_t end_ix = ix + separator.size(); end_ix != text.size())
+		{
+			if constexpr (I + 2 < N)
+			{
+				_separate<N, I + 1>(text.substr(end_ix), separator, values);
+			}
+			else
+			{
+				values[I + 1] = text.substr(end_ix);
+			}
+		}
+	}
+}
 }
 
-separate_result separate(const String auto& text, String auto && separator)
+template <std::size_t N = 2>
+std::array<std::string_view, N> separate(const std::string_view text, const std::string_view separator = " ")
 {
-	const auto [foundBegin, foundEnd] = std::ranges::search(text, separator);
-
-	return separate_result{
-		std::string_view{
-			std::begin(text),
-			foundBegin
-		},
-		std::string_view{
-			foundEnd != std::end(text) ? foundEnd + 1 : std::end(text),
-			std::end(text)
-		}
-	};
+	std::array<std::string_view, N> values{};
+	_separate<N>(text, separator, values);
+	return values;
 }
 
 } // util
 
-#endif // __SEPARATE_HPP
+#endif // __UTIL_SEPARATE_HPP
