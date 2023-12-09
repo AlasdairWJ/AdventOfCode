@@ -2,6 +2,7 @@
 #define __UTIL_NUMERIC_HPP
 
 #include "concepts.hpp"
+#include <numeric>
 
 namespace util
 {
@@ -20,6 +21,12 @@ bool solve_quadratic(const T a, const T b, const T c, T& x1, T& x2)
 	x1 = (-b - sqrt_discriminant) / (2 * a);
 	x2 = (-b + sqrt_discriminant) / (2 * a);
 	return true;
+}
+
+template <std::integral T>
+constexpr T lcm(const T a, const T b)
+{
+	return a * b / std::gcd(a, b);
 }
 
 
