@@ -131,36 +131,29 @@ int main(int _, const char*[])
 
 		const auto end_ix = line.find_last_not_of(' ');
 
+		int c = 0;
+
 		for (std::size_t x = begin_ix; x < end_ix; x++)
 		{
-			if (grid_clean[y][x] != ' ')
-				continue;
-
-			// clever girl 
-
-			int c = 0;
-
-			for (std::size_t x2 = x + 1; x2 <= end_ix; x2++)
+			switch (grid_clean[y][x])
 			{
-				switch (grid_clean[y][x2])
-				{
-				case '|':
-					c += 2;
-					break;
-				case 'L':
-				case '7':
-					c += 1;
-					break;
-				case 'J':
-				case 'F':
-					c -= 1;
-					break;
-				default:
-					break;
-				}
+			case ' ':
+				count += c >> 1 & 1;
+				break;
+			case '|':
+				c += 2;
+				break;
+			case 'L':
+			case '7':
+				c += 1;
+				break;
+			case 'J':
+			case 'F':
+				c -= 1;
+				break;
+			default:
+				break;
 			}
-
-			count += c >> 1 & 1;
 		}
 	}
 
