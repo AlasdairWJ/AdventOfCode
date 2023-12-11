@@ -1,15 +1,11 @@
 #include <iostream>
-#include "intcode.hpp"
+#include "../Intcode/IntCPU.hpp"
 
 constexpr int target = 19690720;
 
 int main(int argc, const char* argv[])
 {
-	Program program;
-
-	int value;
-	while (std::cin >> value)
-		program.push_back(value), std::cin.ignore(1);
+	Program program = loadProgramFrom(std::cin);
 
 	for (int noun = 0; noun < 100; noun++)
 	{
@@ -18,14 +14,15 @@ int main(int argc, const char* argv[])
 		{
 			program[2] = verb;
 
-			const int output = execute(program);
-			if (output == target)
+			IntCPU cpu(program);
+
+			if (cpu.run() && cpu.result() == target)
 			{
 				std::cout << 100 * noun + verb;
 				return 0;
 			}
 		}
 	}
-
+	
 	return 1;
 }

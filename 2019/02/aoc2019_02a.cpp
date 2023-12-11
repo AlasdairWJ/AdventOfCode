@@ -1,18 +1,15 @@
 #include <iostream>
-#include "intcode.hpp"
+#include "../Intcode/IntCPU.hpp"
 
-int main(int argc, const char* argv[])
+int main(int _, const char*[])
 {
-	Program program;
-
-	int value;
-	while (std::cin >> value)
-		program.push_back(value), std::cin.ignore(1);
-
+	Program program = loadProgramFrom(std::cin);
 	program[1] = 12;
 	program[2] = 2;
-	
-	std::cout << execute(program);
 
-	return 0;
+	IntCPU cpu(program);
+
+	cpu.run();
+
+	std::cout << cpu.result();
 }

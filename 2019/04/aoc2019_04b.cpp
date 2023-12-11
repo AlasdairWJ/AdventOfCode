@@ -1,8 +1,12 @@
 #include <iostream>
+#include <algorithm> // std::ranges::all_of, std::ranges::contains
+#include <ranges> // std::views::pairwise
 
 constexpr int num_digits = 6;
 
-int main(int argc, const char* argv[])
+const auto is_decreasing = [](const auto pair) { return pair.first >= pair.second; };
+
+int main(int _, const char*[])
 {
 	int lower;
 	std::cin >> lower;
@@ -14,42 +18,21 @@ int main(int argc, const char* argv[])
 
 	int count = 0;
 
-	int digits[num_digits];
 	for (int x = lower; x < upper; x++)
 	{
+		int digits[num_digits], dist[10]{};
 		for (int d = 0, y = x; d < num_digits; d++, y /= 10)
-			digits[d] = y % 10;
-
-		bool is_increasing = true;
-		for (int d = 0; d < num_digits - 1; d++)
 		{
-			if (digits[d] < digits[d + 1])
-			{
-				is_increasing = false;
-				break;
-			}
+			const int digit = y % 10;
+			digits[d] = digit;
+			dist[digit]++;
 		}
 
-		if (!is_increasing)
-			continue;
+		const bool all_decreasing = std::ranges::all_of(digits | std::views::pairwise, is_decreasing);
 
-		bool any_adjacent_digits = false;
-		for (int d = 0; d < num_digits - 1; d++)
-		{
-			if ((digits[d] == digits[d + 1]) &&
-				(d == 0 || digits[d] != digits[d - 1]) &&
-				(d + 2 >= num_digits || digits[d] != digits[d + 2]))
-			{
-				any_adjacent_digits = true;
-				break;
-			}
-		}
-
-		if (any_adjacent_digits)
+		if (all_decreasing && std::ranges::contains(dist, 2))
 			count++;
 	}
 
 	std::cout << count;
-
-	return 0;
 }

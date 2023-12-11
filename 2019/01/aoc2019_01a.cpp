@@ -1,14 +1,11 @@
 #include <iostream>
 
-int main(int argc, const char* argv[])
+int main(int _, const char*[])
 {
 	int total = 0;
 
-	int value;
-	while (std::cin >> value)
+	for (int value; std::cin >> value; )
 		total += (value / 3) - 2;
 
 	std::cout << total;
-
-	return 0;
 }

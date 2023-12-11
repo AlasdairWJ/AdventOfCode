@@ -1,19 +1,12 @@
 #include <iostream>
-#include <iterator>
-#include "intcode.hpp"
+#include "../Intcode/IntCPU.hpp"
 
 int main(int argc, const char* argv[])
 {
-	Program program;
+	const Program program = loadProgramFrom(std::cin);
 
-	int value;
-	while (std::cin >> value)
-		program.push_back(value), std::cin.ignore(1);
-
-	std::vector<int> input { 5 }, output;
-	execute(program, input.begin(), input.end(), std::back_inserter(output));
-
-	std::cout << output.back();
-
-	return 0;
+	IntCPU cpu(program);
+	cpu.input({ 5 });
+	if (cpu.run() && !cpu.output().empty())
+		std::cout << cpu.output().back();
 }

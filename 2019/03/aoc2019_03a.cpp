@@ -1,116 +1,89 @@
 #include <iostream>
-#include <sstream>
 #include <vector>
-
-bool direction_to_delta(const char direction, int& dx, int& dy)
-{
-	dx = 0, dy = 0;
-	switch (direction)
-	{
-	case 'L': dx = -1; break;
-	case 'R': dx = 1; break;
-	case 'U': dy = -1; break;
-	case 'D': dy = 1; break;
-	default: return false;
-	};
-	return true;
-}
-
-struct Line
-{
-	int x, y, dx, dy, length;
-};
+#include <ranges>
 
 struct Point
 {
 	int x, y;
 };
 
-// Ax = b
-bool solve(const int a11, const int a12, const int a21, const int a22,
-		   const int b1, const int b2,
-		   int& x1, int& x2)
+Point delta(const char direction)
 {
-	const int det = a11 * a22 - a12 * a21;
+	switch (direction)
+	{
+	case 'L': return Point{ -1,  0 };
+	case 'R': return Point{  1,  0 };
+	case 'U': return Point{  0, -1 };
+	case 'D': return Point{  0,  1 };
+	default: return Point{};
+	};
+}
 
-	if (det == 0)
+bool in_range(const int x, const int x1, const int x2)
+{
+	return (x1 < x2) ? (x > x1 && x <= x2) : (x < x1 && x >= x2);
+}
+
+bool intersect(const Point& a1, const Point& a2, const Point& b1, const Point& b2, Point& p)
+{
+	const int adx = a2.x - a1.x, ady = a2.y - a1.y;
+	const int bdx = b2.x - b1.x, bdy = b2.y - b1.y;
+	
+	if (bdy * adx == ady * bdx)
 		return false;
 
-	x1 = (a22 * b1 - a12 * b2) / det;
-	x2 = (a11 * b2 - a21 * b1) / det;
-
-	return true;
-}
-
-bool intersects(const Line& a, const Line& b, Point& p)
-{
-	int u, v;
-	if (solve(a.dx, -b.dx, a.dy, -b.dy, b.x - a.x, b.y - a.y, u, v) &&
-		u >= 0 && u <= a.length && v >= 0 && v <= b.length)
+	if (adx == 0)
 	{
-		p.x = a.x + u * a.dx;
-		p.y = a.y + u * a.dy;
-		return true;
+		p = Point{ a1.x, b1.y };
+		return in_range(p.y, a1.y, a2.y) && in_range(p.x, b1.x, b2.x);
 	}
-	return false;
-}
-
-using Path = std::vector<Line>;
-
-Path read_path()
-{
-	Path path;
-
-	std::string line;
-	std::getline(std::cin, line);
-
-	std::stringstream ss(line);
-
-	int x = 0, y = 0;
-
-	char direction;
-	int length;
-	while (ss >> direction, ss >> length)
+	else
 	{
-		Line line;
-		line.x = x;
-		line.y = y;
-		line.length = length;
-		direction_to_delta(direction, line.dx, line.dy);
-
-		x += length * line.dx;
-		y += length * line.dy;
-
-		path.push_back(line);
-
-		ss.ignore(1);
+		p = Point{ b1.x, a1.y };
+		return in_range(p.x, a1.x, a2.x) && in_range(p.y, b1.y, b2.y);
 	}
-
-	return path;
 }
 
 int main(int argc, const char* argv[])
 {
-	const Path path_a = read_path();
-	const Path path_b = read_path();
+	std::vector<Point> paths[2];
 
-	int min_distance = INT_MAX;
-
-	for (const auto& a : path_a)
+	for (auto& path : paths)
 	{
-		for (const auto& b : path_b)
+		auto position = path.emplace_back();
+
+		do
 		{
-			Point p;
-			if (intersects(a, b, p))
+			char direction;
+			std::cin >> direction;
+
+			int distance;
+			std::cin >> distance;
+
+			const auto d = delta(direction);
+
+			position.x += distance * d.x;
+			position.y += distance * d.y;
+
+			path.push_back(position);
+		}
+		while (std::cin.get() == ',');
+	}
+
+	int min_distance = -1;
+
+	for (const auto& [a1, a2] : paths[0] | std::views::adjacent<2>)
+	{
+		for (const auto& [b1, b2] : paths[1] | std::views::adjacent<2>)
+		{
+			if (Point p; intersect(a1, a2, b1, b2, p))
 			{
 				const int distance = std::abs(p.x) + std::abs(p.y);
-				if (distance < min_distance)
+				if (min_distance < 0 || distance < min_distance)
 					min_distance = distance;
 			}
 		}
 	}
 
 	std::cout << min_distance;
-
-	return 0;
 }
