@@ -1,17 +1,14 @@
 #include <iostream>
 
-int main(int argc, const char* argv[])
+int main(int _, const char*[])
 {
 	int total = 0;
 
-	int value;
-	while (std::cin >> value)
+	for (int value; std::cin >> value; )
 	{
-		while (((value /= 3) -= 2) > 0)
+		while (value /= 3, value -= 2, value > 0)
 			total += value;
 	}
 
 	std::cout << total;
-
-	return 0;
 }
