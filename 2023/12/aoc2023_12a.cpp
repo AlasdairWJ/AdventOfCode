@@ -4,45 +4,57 @@
 #include <charconv> // std::from_chars
 #include <string_view>
 #include <ranges> // std::views::split
-#include <numeric> // std::accumulate
-#include <span>
 
-std::size_t or_end(const std::string_view& s, const std::size_t i)
+struct Arrangements
 {
-	return (i != std::string_view::npos) ? i : s.size();
-}
-
-int arrangments(const std::string_view s, const std::span<int> groups, const int min_length)
-{
-	if (groups.empty())
-		return (s.empty() || s.find('#') == std::string_view::npos) ? 1 : 0;
-
-	int total = 0;
-
-	for (std::size_t i = 0; i + min_length <= s.size(); i++)
+	Arrangements(const std::string_view source, const std::vector<int>& groups)
+		: _source{ source }, _groups{ groups }
 	{
-		if (s[i] != '.')
-		{
-			const std::size_t required = or_end(s, s.find_first_not_of('#', i)) - i;
-			const std::size_t available = or_end(s, s.find('.', i)) - i;
-			const std::size_t next_i = i + groups.front();
-
-			if (required <= groups.front() && groups.front() <= available && (next_i == s.size() || s[next_i] != '#'))
-			{
-				total += arrangments(s.substr(next_i + (next_i != s.size())), groups.subspan(1), min_length - groups.front() - 1);
-			}
-
-			if (s[i] == '#')
-				break;
-		}
 	}
 
-	return total;
-}
+	int operator()(std::size_t ix = 0, const std::size_t group_ix = 0)
+	{
+		if (group_ix == _groups.size())
+			return _source.find('#', ix) == std::string_view::npos;
+
+		int total = 0;
+
+		for (; ix < _source.size(); ix++) // min_length
+		{
+			if (_source[ix] != '.')
+			{
+				const std::size_t size = _groups[group_ix];
+
+				const std::size_t required = or_end(_source.find_first_not_of('#', ix)) - ix;
+				const std::size_t available = or_end(_source.find('.', ix)) - ix;
+				const std::size_t next_ix = ix + size;
+
+				if (required <= size && size <= available && (next_ix == _source.size() || _source[next_ix] != '#'))
+				{
+					total += operator()(next_ix + (next_ix != _source.size()), group_ix + 1);
+				}
+			}
+
+			if (_source[ix] == '#')
+				break;
+		}
+
+		return total;
+	}
+
+private:
+	std::size_t or_end(const std::size_t ix) const
+	{
+		return (ix != std::string_view::npos) ? ix : _source.size();
+	}
+
+	std::string_view _source;
+	std::vector<int> _groups;
+};
 
 int main(int _, const char*[])
 {
-	int count = 0;
+	int total = 0;
 
 	for (std::string line; std::getline(std::cin, line) && !line.empty(); )
 	{
@@ -58,10 +70,8 @@ int main(int _, const char*[])
 				groups.push_back(group);
 		}
 
-		const int min_length = std::accumulate(groups.begin(), groups.end(), 0) + groups.size() - 1;
-
-		count += arrangments(springs, groups, min_length);
+		total += Arrangements{ springs, groups }();
 	}
 
-	std::cout << count;
+	std::cout << total;
 }
