@@ -1,44 +1,33 @@
 #include <iostream>
-#include <string>
-#include <ranges>
+#include <string> // std::getline
+#include <ranges> // std::views::split, std::view::drop, std::views::zip
 #include <vector>
-#include <cmath>
 
 #include "../../util/charconv.hpp" // util::from_chars
 #include "../../util/numeric.hpp" // util::solve_quadratic
 
-const auto non_empty = [](auto && r) { return !r.empty(); };
-
-struct Race
-{
-	int time, distance;
-};
-
 int main(int _, const char*[])
 {
-	std::vector<Race> races;
+	std::vector<int> races[2];
 
-	for (const auto member : { &Race::time, &Race::distance })
+	for (auto& race : races)
 	{
 		std::string line;
 		std::getline(std::cin, line);
 
 		std::size_t i = 0;
-		for (auto && r : line | std::views::split(' ') | std::views::drop(1) | std::views::filter(non_empty))
+		for (auto && r : line | std::views::split(' ') | std::views::drop(1))
 		{
 			if (int value; util::from_chars(r, value))
 			{
-				if (i == races.size())
-					races.emplace_back();
-
-				races[i++].*member = value;
+				race.push_back(value);
 			}
 		}
 	}
 
 	int total = 1;
 
-	for (const auto [time, best_distance] : races)
+	for (const auto [time, best_distance] : std::views::zip(races[0], races[1]))
 	{
 		double largest_time, smallest_time;
 		if (util::solve_quadratic<double>(1, -time, best_distance, smallest_time, largest_time))
