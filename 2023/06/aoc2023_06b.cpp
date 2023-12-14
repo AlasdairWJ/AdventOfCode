@@ -1,10 +1,9 @@
 #include <iostream>
-#include <string>
-#include <ranges>
+#include <string> // std::getline
+#include <ranges> // std::views::split, std::view::drop, std::views::join, std::views::zip
 #include <vector>
-#include <cmath>
 #include <iterator>
-#include <algorithm>
+#include <algorithm> // std::ranges::copy
 #include <cstdint>
 
 #include "../../util/charconv.hpp" // util::from_chars
@@ -12,9 +11,9 @@
 
 int main(int _, const char*[])
 {
-	int64_t time{}, distance{};
+	int64_t values[2];
 
-	for (int64_t* pValue : { &time, &distance })
+	for (int64_t& value : values)
 	{
 		std::string line;
 		std::getline(std::cin, line);
@@ -27,11 +26,10 @@ int main(int _, const char*[])
 			std::back_inserter(value_str)
 		);
 
-		if (int64_t value; util::from_chars(value_str, value))
-			*pValue = value;
+		util::from_chars(value_str, value);
 	}
 
 	double largest_time, smallest_time;
-	if (util::solve_quadratic<double>(1, -time, distance, smallest_time, largest_time))
+	if (util::solve_quadratic<double>(1, -values[0], values[1], smallest_time, largest_time))
 		std::cout << static_cast<int>(std::ceil(largest_time) - std::floor(smallest_time)) - 1;
 }
