@@ -2,7 +2,7 @@
 #include <string> // std::getline
 #include <regex>
 #include <string_view>
-#include <ranges>
+#include <ranges> // std::views::split
 #include <map>
 
 #include "../../util/charconv.hpp" // util::from_chars
@@ -11,7 +11,6 @@
 const std::regex game_pattern{ "Game (\\d+): (.*)" };
 
 using namespace std::literals;
-namespace views = std::views;
 
 int main(int _, const char*[])
 {
@@ -29,9 +28,9 @@ int main(int _, const char*[])
 
 		std::string_view all_turns_sv{ match[2].first, match[2].second };
 
-		for (const auto turn_r : all_turns_sv | views::split("; "sv))
+		for (const auto turn_r : all_turns_sv | std::views::split("; "sv))
 		{
-			for (const auto cube_r : turn_r | views::split(", "sv))
+			for (const auto cube_r : turn_r | std::views::split(", "sv))
 			{
 				const auto [count_sv, colour_sv] = util::separate(cube_r);
 
