@@ -3,7 +3,7 @@
 #include <ranges> // std::views::enumerate (sorry non-c++23 people)
 #include <array>
 #include <vector>
-#include <algorithm> // std::ranges::max, std::ranges::contains, std::ranges::count
+#include <algorithm> // std::ranges::max, std::ranges::contains, std::ranges::count, std::ranges::copy
 
 #include "../../util/separate.hpp" // util::separate
 #include "../../util/charconv.hpp" // util::from_chars
@@ -77,7 +77,8 @@ int main(int _, const char*[])
 		auto& play = plays.emplace_back();
 
 		const auto [cards, bid_str] = util::separate(line);
-		std::ranges::copy_n(cards.data(), 5, play.cards.data());
+
+		std::ranges::copy(cards, play.cards.data());
 		util::from_chars(bid_str, play.bid);
 
 		play.calculate_score();
