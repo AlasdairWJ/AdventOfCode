@@ -1,10 +1,9 @@
 #include <iostream>
-#include <string>
+#include <string> // std::getline
 #include <regex>
-#include <ranges>
-#include <charconv>
-#include <vector>
+#include <ranges> // std::views::split
 #include <set>
+#include <vector>
 
 #include "../../util/charconv.hpp" // util::from_chars
 
@@ -31,25 +30,19 @@ int main(int _, const char*[])
 		std::set<int> winning;
 		for (const auto winning_number_str : winning_numbers_str | std::views::split(' '))
 		{
-			if (!winning_numbers_str.empty())
+			if (int number; util::from_chars(winning_number_str, number))
 			{
-				if (int number; util::from_chars(winning_number_str, number))
-				{
-					winning.insert(number);
-				}
+				winning.insert(number);
 			}
 		}
 
 		int matches = 0;
 		for (const auto number_str : numbers_str | std::views::split(' '))
 		{
-			if (!numbers_str.empty())
+			if (int number; util::from_chars(number_str, number))
 			{
-				if (int number; util::from_chars(number_str, number))
-				{
-					if (winning.contains(number))
-						matches++;
-				}
+				if (winning.contains(number))
+					matches++;
 			}
 		}
 
