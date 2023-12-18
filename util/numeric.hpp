@@ -2,7 +2,8 @@
 #define __UTIL_NUMERIC_HPP
 
 #include "concepts.hpp"
-#include <numeric>
+#include <numeric> // std::gcd
+#include <cmath> // std::sqrt
 
 namespace util
 {
