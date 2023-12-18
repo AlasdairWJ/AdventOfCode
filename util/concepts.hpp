@@ -1,5 +1,5 @@
-#ifndef __CONCEPTS_HPP
-#define __CONCEPTS_HPP
+#ifndef __UTIL_CONCEPTS_HPP
+#define __UTIL_CONCEPTS_HPP
 
 #include <type_traits>
 #include <ranges>
@@ -15,4 +15,4 @@ concept String = std::ranges::contiguous_range<R> && std::is_same_v<std::ranges:
 
 }
 
-#endif // __CONCEPTS_HPP
+#endif // __UTIL_CONCEPTS_HPP
