@@ -13,6 +13,8 @@ struct Cuboid
 {
 	int x1, y1, z1;
 	int x2, y2, z2;
+
+	std::set<int> restingOn;
 };
 
 struct Point
@@ -43,15 +45,15 @@ int main(const int argc, const char* argv[])
 		util::from_chars(z2_str, cuboid.z2);
 	}
 
+	const int totalBlocks = static_cast<int>(cuboids.size());
+
 	std::ranges::sort(cuboids, [](auto && c1, auto && c2) { return c1.z1 < c2.z1; });
 	
 	std::map<Point, std::pair<int, int>> heightMap;
-	std::vector<bool> isRemovable(cuboids.size(), true);
 
 	for (auto && [blockID, cuboid] : cuboids | std::views::enumerate)
 	{
 		int maxHeight = 0;
-		std::set<int> restingOn;
 
 		for (Point p{ cuboid.x1, cuboid.y1 }; p.x <= cuboid.x2; p.x++)
 		{
@@ -63,13 +65,13 @@ int main(const int argc, const char* argv[])
 
 					if (height > maxHeight)
 					{
-						restingOn.clear();
+						cuboid.restingOn.clear();
 						maxHeight = height;
 					}
 
 					if (height == maxHeight)
 					{
-						restingOn.insert(id);
+						cuboid.restingOn.insert(id);
 					}
 				}
 			}
@@ -82,12 +84,36 @@ int main(const int argc, const char* argv[])
 				heightMap[p] = std::make_pair(blockID, maxHeight + (cuboid.z2 - cuboid.z1 + 1));
 			}
 		}
-		
-		if (restingOn.size() == 1)
-		{
-			isRemovable[*restingOn.begin()] = false;
-		}
 	}
 
-	std::cout << std::ranges::count(isRemovable, true);
+	int total = 0;
+
+	for (int blockID = 0; blockID < totalBlocks; blockID++)
+	{
+		std::set<int> disintegrated{ blockID };
+
+		for (int otherBlockID = blockID + 1; otherBlockID < totalBlocks; otherBlockID++)
+		{
+			if (cuboids[otherBlockID].restingOn.empty())
+				continue;
+
+			bool wouldFall = true;
+
+			for (const int id : cuboids[otherBlockID].restingOn)
+			{
+				if (!disintegrated.contains(id))
+				{
+					wouldFall = false;
+					break;
+				}
+			}
+
+			if (wouldFall)
+				disintegrated.insert(otherBlockID);
+		}
+
+		total += static_cast<int>(disintegrated.size() - 1);
+	}
+
+	std::cout << total;
 }
