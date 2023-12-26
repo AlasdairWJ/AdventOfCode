@@ -2,7 +2,7 @@
 #define __UTIL_NUMERIC_HPP
 
 #include "concepts.hpp"
-#include <numeric> // std::gcd
+#include <numeric> // std::gcd, std::accumulate
 #include <cmath> // std::sqrt
 
 namespace util
@@ -24,10 +24,27 @@ bool solve_quadratic(const T a, const T b, const T c, T& x1, T& x2)
 	return true;
 }
 
+template <typename T>
+concept IntegerRange = std::ranges::range<T> && std::integral<std::ranges::range_value_t<T>>;
+
+template <IntegerRange T>
+auto gcd(const T& r)
+{
+	using U = std::ranges::range_value_t<T>;
+	return std::accumulate(std::next(r.begin()), r.end(), *r.begin(), std::gcd<U, U>);
+}
+
 template <std::integral T>
 constexpr T lcm(const T a, const T b)
 {
 	return a * b / std::gcd(a, b);
+}
+
+template <IntegerRange T>
+auto lcm(const T& r)
+{
+	using U = std::ranges::range_value_t<T>;
+	return std::accumulate(std::next(r.begin()), r.end(), *r.begin(), util::lcm<U>);
 }
 
 
