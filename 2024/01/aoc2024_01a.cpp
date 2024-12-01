@@ -1,6 +1,7 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <ranges>
 
 int main(int _, const char*[])
 {
@@ -17,8 +18,8 @@ int main(int _, const char*[])
 
 	int total = 0;
 
-	for (int n = 0; n < left.size(); n++)
-		total += std::abs(left[n] - right[n]);
+	for (auto [a, b] : std::views::zip(left, right))
+		total += std::abs(a - b);
 
 	std::cout << total;
 }
