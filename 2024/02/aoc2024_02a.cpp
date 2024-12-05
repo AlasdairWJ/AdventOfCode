@@ -3,19 +3,22 @@
 #include <vector>
 #include <algorithm> // std::ranges::sort
 
-#include "../../util/charconv.hpp"
+#include "../util/charconv.hpp"
 
 bool is_safe(const auto& values)
 {
-	const bool is_asc = std::ranges::is_sorted(values, std::less{});
-	const bool is_desc = std::ranges::is_sorted(values, std::greater{});
+	const bool is_ordered = 
+		std::ranges::is_sorted(values, std::less{}) ||
+		std::ranges::is_sorted(values, std::greater{});
 
-	bool is_adj = true;
+	if (!is_ordered)
+		return false;
 
 	for (const auto [a, b] : values | std::views::adjacent<2>)
-		is_adj &= (a != b) && std::abs(b - a) <= 3;
+		if ((a == b) || std::abs(b - a) > 3)
+			return false;
 
-	return is_adj && (is_asc | is_desc);
+	return true;
 }
 
 int main(int _, const char*[])
@@ -24,10 +27,10 @@ int main(int _, const char*[])
 
 	for (std::string line; std::getline(std::cin, line); )
 	{
-		std::vector<int> values;
-
-		for (auto && r : line | std::views::split(' '))
-			util::from_chars(r, values.emplace_back());
+		const auto values = line 
+			| std::views::split(' ')
+			| std::views::transform(util::from_chars_t{})
+			| std::ranges::to<std::vector>();
 
 		count += is_safe(values);
 	}
