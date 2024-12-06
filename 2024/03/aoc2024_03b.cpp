@@ -4,7 +4,7 @@
 #include <ranges>
 
 #include "../util/charconv.hpp"
-#include "../util/regex.hpp"
+#include "../../util/regex.hpp"
 
 int main(int _, const char*[])
 {
