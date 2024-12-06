@@ -8,7 +8,7 @@
 #include <format>
 
 #include "../../util/charconv.hpp" // util::from_chars
-#include "../../util/tokenize.hpp" // util::tokenize
+#include "../../util/regex.hpp" // util::tokens
 
 const std::regex instruction_re{ "\\d+|L|R" };
 
@@ -22,7 +22,7 @@ std::vector<Instruction> parse_instructions(const std::string& line)
 {
 	std::vector<Instruction> instructions;
 
-	for (const auto& sub_match : util::tokenize(line, instruction_re))
+	for (const auto& sub_match : util::tokens(line, instruction_re))
 	{
 		if (const char c = *sub_match.first; std::isdigit(c))
 		{

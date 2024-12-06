@@ -14,7 +14,7 @@ int main(int _, const char*[])
 
 	for (std::string line; std::getline(std::cin, line); )
 	{
-		for (const auto match : util::all_matches(line, pattern))
+		for (const auto match : util::matches(line, pattern))
 		{
 			total += util::from_chars(match[1]) * util::from_chars(match[2]);
 		}
