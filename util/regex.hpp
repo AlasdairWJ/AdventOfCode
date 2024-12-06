@@ -12,7 +12,15 @@ using sv_match = std::match_results<std::string_view::const_iterator>;
 using sv_regex_iterator = std::regex_iterator<std::string_view::const_iterator>;
 using sv_regex_token_iterator = std::regex_token_iterator<std::string_view::const_iterator>;
 
-auto all_matches(const std::string_view line, const std::regex& pattern)
+auto tokens(const std::string_view line, const std::regex& pattern)
+{
+	return std::ranges::subrange(
+		sv_regex_token_iterator(line.begin(), line.end(), pattern),
+		sv_regex_token_iterator()
+	);
+}
+
+auto matches(const std::string_view line, const std::regex& pattern)
 {
 	return std::ranges::subrange(
 		sv_regex_iterator(line.begin(), line.end(), pattern),

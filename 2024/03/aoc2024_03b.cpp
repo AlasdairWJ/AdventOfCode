@@ -15,7 +15,7 @@ int main(int _, const char*[])
 
 	for (std::string line; std::getline(std::cin, line); )
 	{
-		for (const auto match : util::all_matches(line, pattern))
+		for (const auto match : util::matches(line, pattern))
 		{
 			if (match[0] == "do()")
 			{
