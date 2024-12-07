@@ -6,28 +6,14 @@
 #include "../../util/separate.hpp"
 #include "../util/charconv.hpp"
 
-long long concat(long long value, int x)
+long long concat(const long long value, const int x)
 {
-	int y = 0;
-	int n = 0;
+	int p = 1;
 
-	while (x != 0)
-	{
-		y *= 10;
-		y += x % 10;
-		x /= 10;
-		n++;
-	}
+	for (int y = x; y != 0; y /= 10)
+		p *= 10;
 
-	while (n != 0)
-	{
-		value *= 10;
-		value += y % 10;
-		y /= 10;
-		n--;
-	}
-
-	return value;
+	return p * value + x;
 }
 
 bool test(const long long target, long long current, const auto it, const auto end)
