@@ -20,13 +20,13 @@ T from_chars(const std::string_view str)
 template <typename T = int, typename It>
 T from_chars(const std::pair<It, It>& pair)
 {
-	return from_chars(std::string_view{ pair.first, pair.second });
+	return from_chars<T>(std::string_view{ pair.first, pair.second });
 }
 
 template <typename T = int>
 T from_chars(std::ranges::contiguous_range auto && r)
 {
-	return from_chars(std::string_view{ r });
+	return from_chars<T>(std::string_view{ r });
 }
 
 
