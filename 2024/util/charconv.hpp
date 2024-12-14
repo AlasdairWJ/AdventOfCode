@@ -8,27 +8,30 @@
 namespace util
 {
 
-template <typename T = int>
-T from_chars(const std::string_view str)
+void from_chars(const std::string_view str, auto& value)
 {
-	T value{};
 	const char* data = str.data();
 	std::from_chars(data, data + str.size(), value);
-	return value;
 }
 
-template <typename T = int, typename It>
-T from_chars(const std::pair<It, It>& pair)
+template <typename It>
+void from_chars(const std::pair<It, It>& pair, auto& value)
 {
-	return from_chars<T>(std::string_view{ pair.first, pair.second });
+	from_chars(std::string_view{ pair.first, pair.second }, value);
+}
+
+void from_chars(std::ranges::contiguous_range auto && r, auto& value)
+{
+	from_chars(std::string_view{ r }, value);
 }
 
 template <typename T = int>
-T from_chars(std::ranges::contiguous_range auto && r)
+T from_chars(const auto& obj)
 {
-	return from_chars<T>(std::string_view{ r });
+	T value;
+	from_chars(obj, value);
+	return value;
 }
-
 
 template <typename T = int>
 struct from_chars_t
