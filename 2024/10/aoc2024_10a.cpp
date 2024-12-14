@@ -3,7 +3,7 @@
 #include <vector>
 #include <set>
 
-#include "../../util/Geometry.hpp"
+#include "../../util/point.hpp"
 
 using util::Point;
 

@@ -4,7 +4,7 @@
 #include <map>
 #include <set>
 
-#include "../../util/Geometry.hpp"
+#include "../../util/point.hpp"
 
 using util::Point;
 

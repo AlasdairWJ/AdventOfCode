@@ -1,6 +1,8 @@
 #ifndef __UTIL_GEOMETRY_HPP
 #define __UTIL_GEOMETRY_HPP
 
+#include <cmath>
+
 namespace util
 {
 struct Point
@@ -36,8 +38,13 @@ struct Point
 	}
 
 	auto operator<=>(const Point&) const = default;
+
+	static bool CompareX(const Point& lhs, const Point& rhs) { return lhs.x < rhs.x; }
+	static bool CompareY(const Point& lhs, const Point& rhs) { return lhs.y < rhs.y; }
 };
 
+Point operator+(const Point& p) { return p; }
+Point operator-(const Point& p) { return Point{ -p.x, -p.y }; }
 Point operator+(Point a, const Point& b) { return a += b; }
 Point operator-(Point a, const Point& b) { return a -= b; }
 Point operator*(Point a, const int value) { return a *= value; }
