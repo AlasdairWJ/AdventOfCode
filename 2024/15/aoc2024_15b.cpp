@@ -3,7 +3,8 @@
 #include <vector>
 #include <ranges>
 
-#include "../../util/point.hpp"
+#include "../../util/Grid.hpp"
+#include "../../util/Point.hpp"
 
 using util::Point;
 
@@ -26,9 +27,9 @@ Point direction_from_char(const char c)
 	}
 }
 
-bool can_move_vertical(const auto& lines, const Point& p, int dy)
+bool can_move_vertical(const auto& grid, const Point& p, int dy)
 {
-	const char above = lines[p.y + dy][p.x];
+	const char above = grid[p.x, p.y + dy];
 
 	switch (above)
 	{
@@ -37,13 +38,13 @@ bool can_move_vertical(const auto& lines, const Point& p, int dy)
 
 	case CrateLeft:
 		return
-			can_move_vertical(lines, Point{ p.x, p.y + dy }, dy) &&
-			can_move_vertical(lines, Point{ p.x + 1, p.y + dy }, dy);
+			can_move_vertical(grid, Point{ p.x, p.y + dy }, dy) &&
+			can_move_vertical(grid, Point{ p.x + 1, p.y + dy }, dy);
 
 	case CrateRight:
 		return
-			can_move_vertical(lines, Point{ p.x, p.y + dy }, dy) &&
-			can_move_vertical(lines, Point{ p.x - 1, p.y + dy }, dy);
+			can_move_vertical(grid, Point{ p.x, p.y + dy }, dy) &&
+			can_move_vertical(grid, Point{ p.x - 1, p.y + dy }, dy);
 
 	case Empty:
 	default:
@@ -51,69 +52,61 @@ bool can_move_vertical(const auto& lines, const Point& p, int dy)
 	}
 }
 
-void move_vertical(auto& lines, const Point& p, int dy)
+void move_vertical(auto& grid, const Point& p, int dy)
 {
-	const char above = lines[p.y + dy][p.x];
+	const char above = grid[p.x, p.y + dy];
 
 	switch (above)
 	{
 	case CrateLeft:
-		move_vertical(lines, Point{ p.x, p.y + dy }, dy);
-		move_vertical(lines, Point{ p.x + 1, p.y + dy }, dy);
+		move_vertical(grid, Point{ p.x, p.y + dy }, dy);
+		move_vertical(grid, Point{ p.x + 1, p.y + dy }, dy);
 		break;
 
 	case CrateRight:
-		move_vertical(lines, Point{ p.x, p.y + dy }, dy);
-		move_vertical(lines, Point{ p.x - 1, p.y + dy }, dy);
+		move_vertical(grid, Point{ p.x, p.y + dy }, dy);
+		move_vertical(grid, Point{ p.x - 1, p.y + dy }, dy);
 		break;
 
 	default:
 		break;
 	}
 
-	lines[p.y + dy][p.x] = lines[p.y][p.x];
-	lines[p.y][p.x] = Empty;
+	grid[p.x, p.y + dy] = grid[p.x, p.y];
+	grid[p.x, p.y] = Empty;
 }
 
 int main(int _, const char*[])
 {
-	std::vector<std::string> lines;
+	util::Grid initial_grid;
+	std::cin >> initial_grid;
 
-	for (std::string line; std::getline(std::cin, line) && !line.empty(); )
+	util::Grid grid(2 * initial_grid.width(), initial_grid.height());
+
+	for (int y = 0; y < initial_grid.height(); y++)
 	{
-		auto& l = lines.emplace_back();
-
-		for (const char c : line)
+		for (int x = 0; x < initial_grid.width(); x++)
 		{
-			switch (c)
+			switch (const char c = initial_grid[x, y]; c)
 			{
 			case Crate:
-				l.push_back(CrateLeft);
-				l.push_back(CrateRight);
+				grid[2 * x, y] = CrateLeft;
+				grid[2 * x + 1, y] = CrateRight;
 				break;
 			case Robot:
-				l.push_back(Robot);
-				l.push_back(Empty);
+				grid[2 * x, y] = Robot;
+				grid[2 * x + 1, y] = Empty;
 				break;
 			default:
-				l.push_back(c);
-				l.push_back(c);
+				grid[2 * x, y] = c;
+				grid[2 * x + 1, y] = c;
 				break;
 			}
 		}
 	}
 
-	Point robot{};
-
-	for (auto [ix, line] : lines | std::views::enumerate)
-	{
-		if (const auto pos = line.find(Robot); pos != std::string::npos)
-		{
-			robot.x = static_cast<int>(pos);
-			robot.y = static_cast<int>(ix);
-			break;
-		}
-	}
+	const auto [rx, ry] = grid.find(Robot);
+	Point robot{ rx, ry };
 
 	for (std::string line; std::getline(std::cin, line); )
 	{
@@ -127,26 +120,26 @@ int main(int _, const char*[])
 
 				const Point neighbour = robot + d;
 
-				if (lines[neighbour.y][neighbour.x] != Wall)
+				if (grid[neighbour.x, neighbour.y] != Wall)
 				{
 					Point q = neighbour;
 
-					while (lines[q.y][q.x] == CrateLeft || lines[q.y][q.x] == CrateRight)
+					while (grid[q.x, q.y] == CrateLeft || grid[q.x, q.y] == CrateRight)
 					{
-						q += d;
+						q += d,
 						q += d;
 					}
 
-					if (lines[q.y][q.x] == Empty)
+					if (grid[q.x, q.y] == Empty)
 					{
 						while (q != neighbour)
 						{
-							lines[q.y][q.x] = lines[q.y - d.y][q.x - d.x];
+							grid[q.x, q.y] = grid[q.x - d.x, q.y - d.y];
 							q -= d;
 						}
 
-						lines[q.y][q.x] = Robot;
-						lines[robot.y][robot.x] = Empty;
+						grid[q.x, q.y] = Robot;
+						grid[robot.x, robot.y] = Empty;
 
 						robot = neighbour;
 					}
@@ -157,9 +150,9 @@ int main(int _, const char*[])
 			{
 				// Vertical movement
 
-				if (can_move_vertical(lines, robot, d.y))
+				if (can_move_vertical(grid, robot, d.y))
 				{
-					move_vertical(lines, robot, d.y);
+					move_vertical(grid, robot, d.y);
 					robot += d;
 				}
 			}
@@ -168,15 +161,15 @@ int main(int _, const char*[])
 
 	int total = 0;
 
-	for (auto [index, line] : lines | std::views::enumerate)
+	for (auto [index, row] : grid | std::views::enumerate)
 	{
-		auto pos = line.find(CrateLeft);
+		auto pos = row.find(CrateLeft);
 
 		while (pos != std::string::npos)
 		{
 			total += 100 * static_cast<int>(index) + static_cast<int>(pos);
 
-			pos = line.find(CrateLeft, pos + 1);
+			pos = row.find(CrateLeft, pos + 1);
 		}
 	}
 

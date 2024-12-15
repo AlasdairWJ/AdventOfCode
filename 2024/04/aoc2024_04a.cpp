@@ -1,6 +1,6 @@
 #include <iostream>
-#include <string>
-#include <vector>
+
+#include "../../util/Grid.hpp"
 
 constexpr char XMAS[]{ 'X', 'M', 'A', 'S' };
 constexpr int Size = std::size(XMAS);
@@ -16,11 +16,11 @@ constexpr int directions[][2]{
 	{  1,  1 }
 };
 
-bool is_match(const auto& lines int x, int y, const int dx, const int dy)
+bool is_match(const auto& grid, int x, int y, const int dx, const int dy)
 {
 	for (int n = 0; n < Size; n++, x += dx, y += dy)
 	{
-		if (lines[y][x] != XMAS[n])
+		if (grid[x, y] != XMAS[n])
 			return false;
 	}
 
@@ -29,35 +29,19 @@ bool is_match(const auto& lines int x, int y, const int dx, const int dy)
 
 int main(int _, const char*[])
 {
-	std::vector<std::string> lines;
+	util::Grid grid;
+	std::cin >> grid;
 
-	for (std::string line; std::getline(std::cin, line); )
-		lines.push_back(line);
-
-	const int width = static_cast<int>(lines.front().size());
-	const int height = static_cast<int>(lines.size());
-	
 	int count = 0;
 
-	for (int x = 0; x < width; x++)
+	for (int x = 0; x < grid.width(); x++)
 	{
-		for (int y = 0; y < height; y++)
+		for (int y = 0; y < grid.height(); y++)
 		{
 			for (const auto [dx, dy] : directions)
 			{
-				if (dx < 0 && x < Size - 1)
-					continue;
-
-				if (dx > 0 && x > width - Size)
-					continue;
-
-				if (dy < 0 && y < Size - 1)
-					continue;
-
-				if (dy > 0 && y > height - Size)
-					continue;
-
-				if (is_match(line, x, y, dx, dy))
+				const bool in_bounds = grid.in_bounds(x + dx * (Size - 1), y + dy * (Size - 1));
+				if (in_bounds && is_match(grid, x, y, dx, dy))
 					count++;
 			}
 		}

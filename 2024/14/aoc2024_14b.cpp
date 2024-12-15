@@ -4,7 +4,7 @@
 #include <numeric>
 #include <algorithm>
 
-#include "../../util/point.hpp"
+#include "../../util/Point.hpp"
 #include "../util/charconv.hpp"
 
 using util::Point;

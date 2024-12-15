@@ -1,31 +1,19 @@
 #include <iostream>
-#include <string>
-#include <vector>
 #include <set>
 
-struct Point
+#include "../../util/Grid.hpp"
+#include "../../util/Point.hpp"
+
+using util::Point;
+
+void turn_right(Point& p)
 {
-	int x, y;
-
-	void turn_right()
-	{
-		std::tie(x, y) = std::make_pair(-y, x);
-	}
-
-	auto operator<=>(const Point& other) const = default;
-};
-
-Point operator+(const Point lhs, const Point rhs)
-{
-	return Point{ lhs.x + rhs.x, lhs.y + rhs.y };
+	std::tie(p.x, p.y) = std::make_pair(-p.y, p.x);
 }
 
-bool do_walk(const auto& lines, const Point start_p, std::set<Point>* pLocations = nullptr)
+bool do_walk(const auto& grid, const Point start_p, std::set<Point>* pLocations = nullptr)
 {
 	std::set<Point> corners;
-
-	const int height = static_cast<int>(lines.size());
-	const int width = static_cast<int>(lines.front().size());
 
 	Point p = start_p, delta{ 0, -1 };
 
@@ -33,22 +21,22 @@ bool do_walk(const auto& lines, const Point start_p, std::set<Point>* pLocations
 	{
 		Point q = p + delta;
 
-		if (q.x < 0 || q.y < 0 || q.x >= width || q.y >= height)
+		if (!grid.in_bounds(q.x, q.y))
 			return false;
 
-		if (lines[q.y][q.x] == '#')
+		if (grid[q.x, q.y] == '#')
 		{
 			const auto [_, is_new] = corners.emplace(p);
 
 			if (!is_new)
 				return true;
 
-			delta.turn_right();
+			turn_right(delta);
 			q = p + delta;
 
-			if (lines[q.y][q.x] == '#')
+			if (grid[q.x, q.y] == '#')
 			{
-				delta.turn_right();
+				turn_right(delta);
 				q = p + delta;
 			}
 		}
@@ -64,40 +52,25 @@ bool do_walk(const auto& lines, const Point start_p, std::set<Point>* pLocations
 
 int main(int _, const char*[])
 {
-	int start_x = -1;
-	std::vector<std::string> lines;
+	util::Grid grid;
+	std::cin >> grid;
 
-	int start_y = 0;
-	for (std::string line; std::getline(std::cin, line); )
-	{
-		if (start_x < 0)
-		{
-			if (const auto ix = line.find('^'); ix != std::string::npos)
-				start_x = static_cast<int>(ix);
-			else
-				start_y++;
-		}
-
-		lines.push_back(line);
-	}
-
-	const int width = static_cast<int>(lines.front().size());
-	const int height = static_cast<int>(lines.size());
+	const auto [start_x, start_y] = grid.find('^');
 
 	const Point start_p{ start_x, start_y };
 
 	std::set<Point> locations;
-	do_walk(lines, start_p, &locations);
+	do_walk(grid, start_p, &locations);
 
 	int count = 0;
 
 	for (const auto [x, y] : locations)
 	{
-		if (char& c = lines[y][x]; c == '.')
+		if (char& c = grid[x, y]; c == '.')
 		{
 			c = '#';
 
-			if (const bool looped = do_walk(lines, start_p); looped)
+			if (const bool looped = do_walk(grid, start_p); looped)
 				count++;
 
 			c = '.';

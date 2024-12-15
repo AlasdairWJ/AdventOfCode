@@ -50,6 +50,13 @@ Point operator-(Point a, const Point& b) { return a -= b; }
 Point operator*(Point a, const int value) { return a *= value; }
 Point operator*(const int value, Point b) { return b *= value; }
 Point operator/(Point a, const int value) { return a /= value; }
+	
+constexpr Point UnitDirections[]{
+	Point{ 0, 1 },
+	Point{ 0, -1 },
+	Point{ 1, 0 },
+	Point{ -1, 0 }
+};
 
 } // util
 

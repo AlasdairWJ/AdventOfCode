@@ -1,20 +1,12 @@
 #include <iostream>
-#include <string>
-#include <vector>
 #include <set>
 
-#include "../../util/point.hpp"
+#include "../../util/Grid.hpp"
+#include "../../util/Point.hpp"
 
 using util::Point;
 
-constexpr Point directions[]{
-	Point{ 0, 1 },
-	Point{ 0, -1 },
-	Point{ 1, 0 },
-	Point{ -1, 0 }
-};
-
-int trail_heads(const int width, const int height, const auto& lines, const Point start)
+int trail_heads(const auto& grid, const Point start)
 {
 	std::set<Point> locations{ start };
 
@@ -24,18 +16,13 @@ int trail_heads(const int width, const int height, const auto& lines, const Poin
 
 		for (const auto& l : locations)
 		{
-			for (const auto& d : directions)
+			for (const auto& d : util::UnitDirections)
 			{
 				const auto p = l + d;
 
-				const bool ok = 
-					(p.x >= 0) && 
-					(p.y >= 0) && 
-					(p.x < width) && 
-					(p.y < height) && 
-					(lines[p.y][p.x] == h);
+				const bool in_bounds = grid.in_bounds(p.x, p.y);
 
-				if (ok)
+				if (in_bounds && grid[p.x, p.y] == h)
 					next.insert(p);
 			}
 		}
@@ -48,23 +35,18 @@ int trail_heads(const int width, const int height, const auto& lines, const Poin
 
 int main(int _, const char*[])
 {
-	std::vector<std::string> lines;
-
-	for (std::string line; std::getline(std::cin, line); line)
-		lines.push_back(line);
-
-	const int height = static_cast<int>(lines.size());
-	const int width = static_cast<int>(lines.front().size());
+	util::Grid grid;
+	std::cin >> grid;
 
 	int total = 0;
 
-	for (Point p{}; p.y < height; p.y++)
+	for (Point p{}; p.y < grid.height(); p.y++)
 	{
-		for (p.x = 0; p.x < width; p.x++)
+		for (p.x = 0; p.x < grid.width(); p.x++)
 		{
-			if (lines[p.y][p.x] == '0')
+			if (grid[p.x, p.y] == '0')
 			{
-				total += trail_heads(width, height, lines, p);
+				total += trail_heads(grid, p);
 			}
 		}
 	}
