@@ -1,33 +1,19 @@
 #include <iostream>
-#include <vector>
-#include <string>
 #include <set>
 #include <cctype>
 
-#include "../../util/point.hpp"
+#include "../../util/Point.hpp"
+#include "../../util/Grid.hpp"
 
 using util::Point;
 
-constexpr Point directions[]{
-	Point{ 1, 0 },
-	Point{ -1, 0 },
-	Point{ 0, 1 },
-	Point{ 0, -1 }
-};
-
-auto extract_area(
-	const int width, 
-	const int height,
-	auto& lines, 
-	const int start_x, 
-	const int start_y
-)
+auto extract_area(auto& grid, const int start_x, const int start_y)
 {
-	const char letter = lines[start_y][start_x];
+	const char letter = grid[start_x, start_y];
 
 	std::set<Point> current;
 	current.emplace(start_x, start_y);
-	lines[start_y][start_x] = '.';
+	grid[start_x, start_y] = '.';
 
 	auto all = current;
 
@@ -37,20 +23,15 @@ auto extract_area(
 
 		for (const auto p : current)
 		{
-			for (const auto d : directions)
+			for (const auto d : util::UnitDirections)
 			{
 				const auto q = p + d;
 
-				const bool ok = 
-					q.x >= 0 && 
-					q.y >= 0 &&
-					q.x < width &&
-					q.y < height &&
-					lines[q.y][q.x] == letter;
+				const bool in_bounds = grid.in_bounds(q.x, q.y);
 
-				if (ok)
+				if (in_bounds && grid[q.x, q.y] == letter)
 				{
-					lines[q.y][q.x] = '.';
+					grid[q.x, q.y] = '.';
 					next.insert(q);
 				}
 
@@ -70,7 +51,7 @@ int calculate_perimeter(const auto& area)
 
 	for (const auto p : area)
 	{
-		for (const auto d : directions)
+		for (const auto d : util::UnitDirections)
 		{
 			if (!area.contains(p + d))
 				total++;
@@ -82,29 +63,21 @@ int calculate_perimeter(const auto& area)
 
 int main(int _, const char*[])
 {
-	std::vector<std::string> lines;
-
-	for (std::string line; std::cin >> line; )
-		lines.push_back(line);
-
-	const int height = static_cast<int>(lines.size());
-	const int width = static_cast<int>(lines.front().size());
+	util::Grid grid;
+	std::cin >> grid;
 
 	int total = 0;
 
-	for (int y = 0; y < height; y++)
+	for (int y = 0; y < grid.height(); y++)
 	{
-		for (int x = 0; x < width; x++)
+		for (int x = 0; x < grid.width(); x++)
 		{
-			const char c = lines[y][x];
-
-			if (std::isalpha(c))
+			if (const char c = grid[x, y]; std::isalpha(c))
 			{
-				const auto area = extract_area(width, height, lines, x, y);
+				const auto area = extract_area(grid, x, y);
 				const auto perimeter = calculate_perimeter(area);
 
 				total += area.size() * perimeter;
-				//std::cout << c << " - " << area.size() << " - " << perimeter << '\n';
 			}
 		}
 	}

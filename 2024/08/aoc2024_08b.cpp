@@ -1,11 +1,10 @@
 #include <iostream>
-#include <string>
-#include <vector>
 #include <map>
 #include <set>
 #include <numeric>
 
-#include "../../util/point.hpp"
+#include "../../util/Grid.hpp"
+#include "../../util/Point.hpp"
 
 using util::Point;
 
@@ -16,21 +15,16 @@ Point simplify(const Point& p)
 
 int main(int _, const char*[])
 {
-	std::vector<std::string> lines;
-
-	for (std::string line; std::getline(std::cin, line); )
-		lines.push_back(line);
+	util::Grid grid;
+	std::cin >> grid;
 
 	std::map<char, std::set<Point>> nodes;
 
-	const int height = static_cast<int>(lines.size());
-	const int width = static_cast<int>(lines.front().size());
-
-	for (int y = 0; y < height; y++)
+	for (int y = 0; y < grid.height(); y++)
 	{
-		for (int x = 0; x < width; x++)
+		for (int x = 0; x < grid.width(); x++)
 		{
-			if (const char c = lines[y][x]; c != '.')
+			if (const char c = grid[x, y]; c != '.')
 			{
 				nodes[c].emplace(x, y);
 			}
@@ -47,10 +41,10 @@ int main(int _, const char*[])
 			{
 				const Point d = simplify(*it_b - *it_a);
 
-				for (Point p = *it_a; p.x >= 0 && p.y >= 0 && p.x < width && p.y < height; p -= d)
+				for (Point p = *it_a; grid.in_bounds(p.x, p.y); p -= d)
 					antinodes.insert(p);
 
-				for (Point p = *it_a + d; p.x >= 0 && p.y >= 0 && p.x < width && p.y < height; p += d)
+				for (Point p = *it_a + d; grid.in_bounds(p.x, p.y); p += d)
 					antinodes.insert(p);
 			}
 		}

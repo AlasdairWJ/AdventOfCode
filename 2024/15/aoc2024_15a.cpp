@@ -1,9 +1,8 @@
 #include <iostream>
-#include <string>
-#include <vector>
 #include <ranges>
 
-#include "../../util/point.hpp"
+#include "../../util/Grid.hpp"
+#include "../../util/Point.hpp"
 
 using util::Point;
 
@@ -26,23 +25,11 @@ Point direction_from_char(const char c)
 
 int main(int _, const char*[])
 {
-	std::vector<std::string> lines;
+	util::Grid grid;
+	std::cin >> grid;
 
-	for (std::string line; std::getline(std::cin, line) && !line.empty(); )
-		lines.push_back(line);
-
-	Point robot{};
-
-	for (auto [ix, line] : lines | std::views::enumerate)
-	{
-		if (const auto pos = line.find(Robot); pos != std::string::npos)
-		{
-			robot.x = static_cast<int>(pos);
-			robot.y = static_cast<int>(ix);
-			line[pos] = Empty;
-			break;
-		}
-	}
+	const auto [rx, ry] = grid.find(Robot);
+	Point robot{ rx, ry };
 
 	for (std::string line; std::getline(std::cin, line); )
 	{
@@ -51,7 +38,7 @@ int main(int _, const char*[])
 			const Point d = direction_from_char(c);
 			
 			const Point neighbour = robot + d;
-			char n = lines[neighbour.y][neighbour.x];
+			char n = grid[neighbour.x, neighbour.y];
 
 			if (n != Wall)
 			{
@@ -63,7 +50,7 @@ int main(int _, const char*[])
 					do
 					{
 						q += d;
-						n = lines[q.y][q.x];
+						n = grid[q.x, q.y];
 					}
 					while (n == Crate);
 				}
@@ -71,10 +58,10 @@ int main(int _, const char*[])
 				if (n == Empty)
 				{
 					if (move_crates)
-					{
-						lines[neighbour.y][neighbour.x] = Empty;
-						lines[q.y][q.x] = Crate;
-					}
+						grid[q.x, q.y] = Crate;
+
+					grid[neighbour.x, neighbour.y] = Robot;
+					grid[robot.x, robot.y] = Empty;
 
 					robot = neighbour;
 				}
@@ -84,15 +71,15 @@ int main(int _, const char*[])
 
 	int total = 0;
 
-	for (auto [index, line] : lines | std::views::enumerate)
+	for (auto [index, row] : grid | std::views::enumerate)
 	{
-		auto pos = line.find(Crate);
+		auto pos = row.find(Crate);
 
 		while (pos != std::string::npos)
 		{
 			total += 100 * static_cast<int>(index) + static_cast<int>(pos);
 
-			pos = line.find(Crate, pos + 1);
+			pos = row.find(Crate, pos + 1);
 		}
 	}
 

@@ -1,44 +1,39 @@
 #include <iostream>
-#include <string>
-#include <vector>
+
+#include "../../util/Grid.hpp"
 
 constexpr int Size = 3;
 
-bool is_match(const auto& lines, const int x, const int y)
+bool is_match(const auto& grid, const int x, const int y)
 {
 	return
-		(lines[y + 1][x + 1] == 'A')
+		(grid[x + 1, y + 1] == 'A')
 		&&
 		(
-			(lines[y][x] == 'M' && lines[y + 2][x + 2] == 'S')
+			(grid[x, y] == 'M' && grid[x + 2, y + 2] == 'S')
 			||
-			(lines[y][x] == 'S' && lines[y + 2][x + 2] == 'M')
+			(grid[x, y] == 'S' && grid[x + 2, y + 2] == 'M')
 		)
 		&&
 		(
-			(lines[y][x + 2] == 'M' && lines[y + 2][x] == 'S')
+			(grid[x, y + 2] == 'M' && grid[x + 2, y] == 'S')
 			||
-			(lines[y][x + 2] == 'S' && lines[y + 2][x] == 'M')
+			(grid[x, y + 2] == 'S' && grid[x + 2, y] == 'M')
 		);
 }
 
 int main(int _, const char*[])
 {
-	std::vector<std::string> lines;
-
-	for (std::string line; std::getline(std::cin, line); )
-		lines.push_back(line);
-
-	const int width = static_cast<int>(lines.front().size());
-	const int height = static_cast<int>(lines.size());
+	util::Grid grid;
+	std::cin >> grid;
 	
 	int count = 0;
 
-	for (int x = 0; x <= width - Size; x++)
+	for (int x = 0; x <= grid.width() - Size; x++)
 	{
-		for (int y = 0; y <= height - Size; y++)
+		for (int y = 0; y <= grid.height() - Size; y++)
 		{
-			if (is_match(lines, x, y))
+			if (is_match(grid, x, y))
 				count++;
 		}
 	}
