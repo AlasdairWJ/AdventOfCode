@@ -4,7 +4,6 @@
 #include <numeric>
 
 #include "../../util/Grid.hpp"
-#include "../../util/Point.hpp"
 
 using util::Point;
 
@@ -17,16 +16,16 @@ int trail_rating(const auto& grid, const Point start)
 	{
 		decltype(locations) next;
 
-		for (const auto& [l, c] : locations)
+		for (const auto& [p, c] : locations)
 		{
 			for (const auto& d : util::UnitDirections)
 			{
-				const auto p = l + d;
+				const auto q = p + d;
 
-				const bool in_bounds = grid.in_bounds(p.x, p.y);
+				const bool in_bounds = grid.in_bounds(q);
 
-				if (in_bounds && grid[p.x, p.y] == h)
-					next[p] += c;
+				if (in_bounds && grid[q] == h)
+					next[q] += c;
 			}
 		}
 
@@ -48,7 +47,7 @@ int main(int _, const char*[])
 	{
 		for (p.x = 0; p.x < grid.width(); p.x++)
 		{
-			if (grid[p.x, p.y] == '0')
+			if (grid[p] == '0')
 			{
 				total += trail_rating(grid, p);
 			}

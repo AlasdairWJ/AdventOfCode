@@ -6,7 +6,6 @@
 
 #include "../util/charconv.hpp"
 #include "../../util/Grid.hpp"
-#include "../../util/Point.hpp"
 #include "../../util/separate.hpp"
 
 using util::Point;
@@ -37,7 +36,7 @@ bool find_route(const auto& grid, const Point start, const Point end, std::set<P
 			for (const auto& d : util::UnitDirections)
 			{
 				const auto q = p + d;
-				if (grid.in_bounds(q.x, q.y) && grid[q.x, q.y] == ' ' && !history.contains(q))
+				if (grid.in_bounds(q) && grid[q] == ' ' && !history.contains(q))
 				{
 					next.insert(q);
 					history.emplace(q, iteration + 1);
@@ -83,8 +82,8 @@ int main(int _, const char*[])
 		blocks.push_back(p);
 	}
 
-	for (const auto [x, y] : blocks | std::views::take(Steps))
-		grid[x, y] = '#';
+	for (const auto& p : blocks | std::views::take(Steps))
+		grid[p] = '#';
 
 	const Point start{ 0, 0 };
 	const Point end{ Size - 1, Size - 1};

@@ -2,7 +2,6 @@
 #include <ranges>
 
 #include "../../util/Grid.hpp"
-#include "../../util/Point.hpp"
 
 using util::Point;
 
@@ -15,10 +14,10 @@ Point direction_from_char(const char c)
 {
 	switch (c)
 	{
-	case '^': return Point{ 0, -1 };
-	case 'v': return Point{ 0, 1 };
-	case '<': return Point{ -1, 0 };
-	case '>': return Point{ 1, 0 };
+	case '^': return util::Up;
+	case 'v': return util::Down;
+	case '<': return util::Left;
+	case '>': return util::Right;
 	default: return Point{};
 	}
 }
@@ -28,8 +27,7 @@ int main(int _, const char*[])
 	util::Grid grid;
 	std::cin >> grid;
 
-	const auto [rx, ry] = grid.find(Robot);
-	Point robot{ rx, ry };
+	Point robot = grid.find(Robot);
 
 	for (std::string line; std::getline(std::cin, line); )
 	{
@@ -38,7 +36,7 @@ int main(int _, const char*[])
 			const Point d = direction_from_char(c);
 			
 			const Point neighbour = robot + d;
-			char n = grid[neighbour.x, neighbour.y];
+			char n = grid[neighbour];
 
 			if (n != Wall)
 			{
@@ -50,7 +48,7 @@ int main(int _, const char*[])
 					do
 					{
 						q += d;
-						n = grid[q.x, q.y];
+						n = grid[q];
 					}
 					while (n == Crate);
 				}
@@ -58,10 +56,10 @@ int main(int _, const char*[])
 				if (n == Empty)
 				{
 					if (move_crates)
-						grid[q.x, q.y] = Crate;
+						grid[q] = Crate;
 
-					grid[neighbour.x, neighbour.y] = Robot;
-					grid[robot.x, robot.y] = Empty;
+					grid[neighbour] = Robot;
+					grid[robot] = Empty;
 
 					robot = neighbour;
 				}

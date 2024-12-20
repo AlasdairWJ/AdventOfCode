@@ -2,41 +2,36 @@
 #include <set>
 
 #include "../../util/Grid.hpp"
-#include "../../util/Point.hpp"
 
 using util::Point;
 
-void turn_right(Point& p)
-{
-	std::tie(p.x, p.y) = std::make_pair(-p.y, p.x);
-}
-
-bool do_walk(const auto& grid, const Point start_p, std::set<Point>* pLocations = nullptr)
+bool do_walk(const auto& grid, const Point start, std::set<Point>* pLocations = nullptr)
 {
 	std::set<Point> corners;
 
-	Point p = start_p, delta{ 0, -1 };
+	Point p = start;
+	Point delta{ 0, -1 };
 
 	for (;;)
 	{
 		Point q = p + delta;
 
-		if (!grid.in_bounds(q.x, q.y))
+		if (!grid.in_bounds(q))
 			return false;
 
-		if (grid[q.x, q.y] == '#')
+		if (grid[q] == '#')
 		{
 			const auto [_, is_new] = corners.emplace(p);
 
 			if (!is_new)
 				return true;
 
-			turn_right(delta);
+			delta = delta.turn_right();
 			q = p + delta;
 
-			if (grid[q.x, q.y] == '#')
+			if (grid[q] == '#')
 			{
-				turn_right(delta);
+				delta = delta.turn_right();
 				q = p + delta;
 			}
 		}
@@ -55,22 +50,20 @@ int main(int _, const char*[])
 	util::Grid grid;
 	std::cin >> grid;
 
-	const auto [start_x, start_y] = grid.find('^');
-
-	const Point start_p{ start_x, start_y };
+	const Point start = grid.find('^');
 
 	std::set<Point> locations;
-	do_walk(grid, start_p, &locations);
+	do_walk(grid, start, &locations);
 
 	int count = 0;
 
-	for (const auto [x, y] : locations)
+	for (const auto p : locations)
 	{
-		if (char& c = grid[x, y]; c == '.')
+		if (char& c = grid[p]; c == '.')
 		{
 			c = '#';
 
-			if (const bool looped = do_walk(grid, start_p); looped)
+			if (const bool looped = do_walk(grid, start); looped)
 				count++;
 
 			c = '.';

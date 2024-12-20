@@ -5,6 +5,8 @@
 #include <string>
 #include <iostream>
 
+#include "Point.hpp"
+
 namespace util
 {
 
@@ -29,15 +31,33 @@ struct Grid
 	int height() const { return _height; }
 
 	char& operator[](const int x, const int y) { return _lines[y][x]; }
-	char operator[](const int x, const int y) const { return _lines[y][x]; }
+	char& operator[](const util::Point& p) { return _lines[p.y][p.x]; }
 
-	bool in_bounds(const int x, const int y) const
+	char operator[](const int x, const int y) const { return _lines[y][x]; }
+	char operator[](const util::Point& p) const { return _lines[p.y][p.x]; }
+
+	void strip_edges()
+	{
+		_lines.erase(_lines.begin());
+		_lines.erase(_lines.end() - 1);
+
+		for (auto& line : _lines)
+		{
+			line.erase(line.begin());
+			line.erase(line.end() - 1);
+		}
+
+		_width -= 2;
+		_height -= 2;
+	}
+
+	bool in_bounds(const util::Point& p) const
 	{
 		return
-			x >= 0 &&
-			y >= 0 &&
-			x < _width && 
-			y < _height;
+			p.x >= 0 &&
+			p.y >= 0 &&
+			p.x < _width && 
+			p.y < _height;
 	}
 
 	std::string& operator[](int y) { return _lines[y]; }
@@ -52,7 +72,7 @@ struct Grid
 	auto begin() const { return _lines.begin(); }
 	auto end() const { return _lines.end(); }
 
-	std::pair<int, int> find(const char c)
+	util::Point find(const char c)
 	{
 		for (int y = 0; y < _height; y++)
 		{

@@ -2,7 +2,6 @@
 #include <set>
 
 #include "../../util/Grid.hpp"
-#include "../../util/Point.hpp"
 
 using util::Point;
 
@@ -14,16 +13,16 @@ int trail_heads(const auto& grid, const Point start)
 	{
 		decltype(locations) next;
 
-		for (const auto& l : locations)
+		for (const auto& p : locations)
 		{
 			for (const auto& d : util::UnitDirections)
 			{
-				const auto p = l + d;
+				const auto q = p + d;
 
-				const bool in_bounds = grid.in_bounds(p.x, p.y);
+				const bool in_bounds = grid.in_bounds(q);
 
-				if (in_bounds && grid[p.x, p.y] == h)
-					next.insert(p);
+				if (in_bounds && grid[q] == h)
+					next.insert(q);
 			}
 		}
 
@@ -44,7 +43,7 @@ int main(int _, const char*[])
 	{
 		for (p.x = 0; p.x < grid.width(); p.x++)
 		{
-			if (grid[p.x, p.y] == '0')
+			if (grid[p] == '0')
 			{
 				total += trail_heads(grid, p);
 			}
