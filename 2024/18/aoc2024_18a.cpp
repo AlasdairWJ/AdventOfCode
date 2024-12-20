@@ -5,7 +5,6 @@
 
 #include "../util/charconv.hpp"
 #include "../../util/Grid.hpp"
-#include "../../util/Point.hpp"
 #include "../../util/separate.hpp"
 
 using util::Point;
@@ -32,8 +31,8 @@ int main(int _, const char*[])
 		blocks.push_back(p);
 	}
 
-	for (const auto [x, y] : blocks | std::views::take(Steps))
-		grid[x, y] = '#';
+	for (const auto& p : blocks | std::views::take(Steps))
+		grid[p] = '#';
 
 	const Point end{ Size - 1, Size - 1};
 
@@ -49,10 +48,10 @@ int main(int _, const char*[])
 		{
 			for (const auto& d : util::UnitDirections)
 			{
-				if (const auto q = p + d; grid.in_bounds(q.x, q.y) && grid[q.x, q.y] == ' ')
+				if (const auto q = p + d; grid.in_bounds(q) && grid[q] == ' ')
 				{
 					next.insert(q);
-					grid[q.x, q.y] = '#';
+					grid[q] = '#';
 				}
 			}
 		}

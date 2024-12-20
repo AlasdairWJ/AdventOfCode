@@ -14,13 +14,13 @@ int main(int _, const char*[])
 
 	std::map<char, std::set<Point>> nodes;
 
-	for (int y = 0; y < grid.height(); y++)
+	for (Point p{}; p.y < grid.height(); p.y++)
 	{
-		for (int x = 0; x < grid.width(); x++)
+		for (p.x = 0; p.x < grid.width(); p.x++)
 		{
-			if (const char c = grid[x, y]; c != '.')
+			if (const char c = grid[p]; c != '.')
 			{
-				nodes[c].emplace(x, y);
+				nodes[c].insert(p);
 			}
 		}
 	}
@@ -35,10 +35,10 @@ int main(int _, const char*[])
 			{
 				const Point d = *it_b - *it_a;
 
-				if (const Point p = *it_a - d; grid.in_bounds(p.x, p.y))
+				if (const Point p = *it_a - d; grid.in_bounds(p))
 					antinodes.insert(p);
 
-				if (const Point p = *it_b + d; grid.in_bounds(p.x, p.y))
+				if (const Point p = *it_b + d; grid.in_bounds(p))
 					antinodes.insert(p);
 			}
 		}

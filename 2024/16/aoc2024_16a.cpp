@@ -2,16 +2,12 @@
 #include <set>
 #include <map>
 
-#include "../../util/Point.hpp"
 #include "../../util/Grid.hpp"
 
 using util::Point;
 
 constexpr char Empty = '.';
 constexpr char Wall = '.';
-
-Point turn_right(const Point& p) { return Point { -p.y, p.x }; }
-Point turn_left(const Point& p) { return Point { p.y, -p.x }; }
 
 constexpr int TurnCost = 1'000;
 
@@ -41,19 +37,19 @@ int find_minimal_path(const auto& grid, const Point start, const Point end)
 
 		nodes.erase(nodes.begin());
 
-		if (const auto q = pos + turn_left(dir); grid[q.x, q.y] == Empty)
+		if (const auto q = pos + dir.turn_left(); grid[q] == Empty)
 		{
 			const int newScore = score + TurnCost + 1;
 			const auto it = history.find(q);
 
 			if (it == history.end() || it->second > newScore)
 			{
-				nodes.emplace(Node{ newScore, q, turn_left(dir) });
+				nodes.emplace(Node{ newScore, q, dir.turn_left() });
 				history[q] = newScore;
 			}
 		}
 
-		if (const auto q = pos + dir; grid[q.x, q.y] == Empty)
+		if (const auto q = pos + dir; grid[q] == Empty)
 		{
 			const int newScore = score + 1;
 			const auto it = history.find(q);
@@ -65,14 +61,14 @@ int find_minimal_path(const auto& grid, const Point start, const Point end)
 			}
 		}
 
-		if (const auto q = pos + turn_right(dir); grid[q.x, q.y] == Empty)
+		if (const auto q = pos + dir.turn_right(); grid[q] == Empty)
 		{
 			const int newScore = score + TurnCost + 1;
 			const auto it = history.find(q);
 
 			if (it == history.end() || it->second > newScore)
 			{
-				nodes.emplace(Node{ newScore, q, turn_right(dir) });
+				nodes.emplace(Node{ newScore, q, dir.turn_right() });
 				history[q] = newScore;
 			}
 		}
@@ -86,11 +82,11 @@ int main(int argc, char const *argv[])
 	util::Grid grid;
 	std::cin >> grid;
 
-	const auto [start_x, start_y] = grid.find('S');
-	const auto [end_x, end_y] = grid.find('E');
+	const Point start = grid.find('S');
+	const Point end = grid.find('E');
 
-	grid[start_x, start_y] = Empty;
-	grid[end_x, end_y] = Empty;
+	grid[start] = Empty;
+	grid[end] = Empty;
 
-	std::cout << find_minimal_path(grid, Point{ start_x, start_y}, Point{ end_x, end_y });
+	std::cout << find_minimal_path(grid, start, end);
 }

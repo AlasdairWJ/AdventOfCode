@@ -4,7 +4,6 @@
 #include <numeric>
 
 #include "../../util/Grid.hpp"
-#include "../../util/Point.hpp"
 
 using util::Point;
 
@@ -20,13 +19,13 @@ int main(int _, const char*[])
 
 	std::map<char, std::set<Point>> nodes;
 
-	for (int y = 0; y < grid.height(); y++)
+	for (Point p{}; p.y < grid.height(); p.y++)
 	{
-		for (int x = 0; x < grid.width(); x++)
+		for (p.x = 0; p.x < grid.width(); p.x++)
 		{
-			if (const char c = grid[x, y]; c != '.')
+			if (const char c = grid[p]; c != '.')
 			{
-				nodes[c].emplace(x, y);
+				nodes[c].insert(p);
 			}
 		}
 	}
@@ -41,10 +40,10 @@ int main(int _, const char*[])
 			{
 				const Point d = simplify(*it_b - *it_a);
 
-				for (Point p = *it_a; grid.in_bounds(p.x, p.y); p -= d)
+				for (Point p = *it_a; grid.in_bounds(p); p -= d)
 					antinodes.insert(p);
 
-				for (Point p = *it_a + d; grid.in_bounds(p.x, p.y); p += d)
+				for (Point p = *it_a + d; grid.in_bounds(p); p += d)
 					antinodes.insert(p);
 			}
 		}

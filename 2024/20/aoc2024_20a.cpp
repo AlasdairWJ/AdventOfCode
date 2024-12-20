@@ -5,7 +5,6 @@
 #include <map>
 
 #include "../../util/Grid.hpp"
-#include "../../util/Point.hpp"
 
 using util::Point;
 
@@ -26,12 +25,12 @@ auto find_route(auto grid, const Point start, const Point end)
 
 	for (int step = 1; p != end; step++)
 	{
-		grid[p.x, p.y] = Wall;
+		grid[p] = Wall;
 		
 		for (const auto d : util::UnitDirections)
 		{
 			const auto q = p + d;
-			if (grid.in_bounds(q.x, q.y) && grid[q.x, q.y] == Empty)
+			if (grid.in_bounds(q) && grid[q] == Empty)
 			{
 				p = q;
 				route.emplace(q, step);
@@ -78,14 +77,11 @@ int main(int _, const char*[])
 	util::Grid grid;
 	std::cin >> grid;
 
-	const auto [start_x, start_y] = grid.find(Start);
-	const auto [end_x, end_y] = grid.find(End);
+	const auto start = grid.find(Start);
+	const auto end = grid.find(End);
 
-	grid[start_x, start_y] = Empty;
-	grid[end_x, end_y] = Empty;
-
-	const Point start{ start_x, start_y };
-	const Point end{ end_x, end_y };
+	grid[start] = Empty;
+	grid[end] = Empty;
 
 	const auto route = find_route(grid, start, end);
 

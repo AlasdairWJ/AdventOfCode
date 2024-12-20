@@ -2,24 +2,20 @@
 #include <set>
 
 #include "../../util/Grid.hpp"
-#include "../../util/Point.hpp"
 
 using util::Point;
-
-void turn_right(Point& p)
-{
-	std::tie(p.x, p.y) = std::make_pair(-p.y, p.x);
-}
 
 int main(int _, const char*[])
 {
 	util::Grid grid;
 	std::cin >> grid;
 
-	const auto [start_x, start_y] = grid.find('^');
+	const auto start = grid.find('^');
 
 	std::set<Point> history;
-	Point p{ start_x, start_y}, delta{ 0, -1 };
+
+	Point p = start;
+	Point delta{ 0, -1 };
 
 	for (;;)
 	{
@@ -27,12 +23,12 @@ int main(int _, const char*[])
 
 		Point q = p + delta;
 
-		if (!grid.in_bounds(q.x, q.y))
+		if (!grid.in_bounds(q))
 			break;
 
-		if (grid[q.x, q.y] == '#')
+		if (grid[q] == '#')
 		{
-			turn_right(delta);
+			delta = delta.turn_right();
 			q = p + delta;
 		}
 

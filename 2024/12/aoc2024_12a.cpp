@@ -2,18 +2,18 @@
 #include <set>
 #include <cctype>
 
-#include "../../util/Point.hpp"
 #include "../../util/Grid.hpp"
 
 using util::Point;
 
-auto extract_area(auto& grid, const int start_x, const int start_y)
+auto extract_area(auto& grid, const Point& start)
 {
-	const char letter = grid[start_x, start_y];
+	const char letter = grid[start];
 
 	std::set<Point> current;
-	current.emplace(start_x, start_y);
-	grid[start_x, start_y] = '.';
+	current.insert(start);
+
+	grid[start] = '.';
 
 	auto all = current;
 
@@ -27,19 +27,18 @@ auto extract_area(auto& grid, const int start_x, const int start_y)
 			{
 				const auto q = p + d;
 
-				const bool in_bounds = grid.in_bounds(q.x, q.y);
-
-				if (in_bounds && grid[q.x, q.y] == letter)
+				if (grid.in_bounds(q) && grid[q] == letter)
 				{
-					grid[q.x, q.y] = '.';
+					grid[q] = '.';
 					next.insert(q);
 				}
 
 			}
 		}
 
+		all.insert(next.begin(), next.end());
+
 		current.swap(next);
-		all.insert(current.begin(), current.end());
 	}
 
 	return all;
@@ -68,13 +67,13 @@ int main(int _, const char*[])
 
 	int total = 0;
 
-	for (int y = 0; y < grid.height(); y++)
+	for (Point p{}; p.y < grid.height(); p.y++)
 	{
-		for (int x = 0; x < grid.width(); x++)
+		for (p.x = 0; p.x < grid.width(); p.x++)
 		{
-			if (const char c = grid[x, y]; std::isalpha(c))
+			if (const char c = grid[p]; std::isalpha(c))
 			{
-				const auto area = extract_area(grid, x, y);
+				const auto area = extract_area(grid, p);
 				const auto perimeter = calculate_perimeter(area);
 
 				total += area.size() * perimeter;
