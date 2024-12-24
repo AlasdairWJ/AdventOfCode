@@ -30,6 +30,11 @@ bool is_valid_addition(const auto& set, const auto& value)
 	return true;
 }
 
+auto above(const auto& container, const auto& key)
+{
+	return std::ranges::subrange(container.lower_bound(key), container.end());
+}
+
 int main(int _, const char*[])
 {
 	std::set<Node> nodes;
@@ -49,13 +54,13 @@ int main(int _, const char*[])
 		groups.insert(std::set{ a, b });
 	}
 
-	for (;;)
+	while (groups.size() > 1)
 	{
 		decltype(groups) next;
 
 		for (const auto& set : groups)
 		{
-			for (const auto& node : nodes)
+			for (const auto& node : above(nodes, *set.rbegin()))
 			{
 				if (is_valid_addition(set, node))
 				{
@@ -65,9 +70,6 @@ int main(int _, const char*[])
 				}
 			}
 		}
-
-		if (next.empty())
-			break;
 
 		groups.swap(next);
 	}
