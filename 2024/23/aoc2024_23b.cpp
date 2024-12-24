@@ -32,7 +32,7 @@ bool is_valid_addition(const auto& set, const auto& value)
 
 auto above(const auto& container, const auto& key)
 {
-	return std::ranges::subrange(container.lower_bound(key), container.end());
+	return std::ranges::subrange(container.upper_bound(key), container.end());
 }
 
 int main(int _, const char*[])
