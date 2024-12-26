@@ -4,24 +4,31 @@
 #include <vector>
 #include <array>
 #include <map>
-#include <set>
 #include <ranges>
+#include <bitset>
 
 using Node = std::array<char, 3>;
 
-std::ostream& operator<<(std::ostream& os, const Node& node)
-{
-	return os.write(node.data(), node.size());
-}
+constexpr int InputCount = 45;
 
-Node parse(const std::string_view line)
+Node parse_node(const std::string_view line)
 {
 	return Node{ line[0], line[1], line[2] };
 }
 
+Node mk_node(const char c, const int n)
+{
+	return Node{ c, static_cast<char>('0' + (n / 10)), static_cast<char>('0' + (n % 10)) };
+}
+
+int id(const Node& node)
+{
+	return 10 * (node[1] - '0') + (node[2] - '0');
+}
+
 enum class Operation : char { OR = '|', AND = '&', XOR = 'x' };
 
-bool exec(const Operation op, const bool a, const bool b)
+bool exec(const bool a, const Operation op, const bool b)
 {
 	switch (op)
 	{
@@ -36,104 +43,77 @@ bool exec(const Operation op, const bool a, const bool b)
 	}
 }
 
-struct Gate
+auto parse_gate(std::string_view line)
 {
-	Node inputs[2];
-	Operation op;
-	Node output;
-	bool current_value;
-	bool next_value;
-
-	void set(const bool a, const bool b)
-	{
-		next_value = exec(op, a, b);
-	}
-};
-
-void parse(std::string_view line, Gate& gate)
-{
-	gate.inputs[0] = parse(line);
+	const auto input0 = parse_node(line);
 
 	line = line.substr(4);
 
+	Operation op;
+
 	if (line.starts_with("OR"))
 	{
-		gate.op = Operation::OR;
 		line = line.substr(3);
+		op = Operation::OR;
 	}
 	else if (line.starts_with("AND"))
 	{
-		gate.op = Operation::AND;
 		line = line.substr(4);
+		op = Operation::AND;
 	}
 	else if (line.starts_with("XOR"))
 	{
-		gate.op = Operation::XOR;
 		line = line.substr(4);
+		op = Operation::XOR;
 	}
 
-	gate.inputs[1] = parse(line);
+	const auto input1 = parse_node(line);
 
 	line = line.substr(7);
 
-	gate.output = parse(line);
+	const auto output = parse_node(line);
+
+	return std::make_pair(output, std::make_tuple(input0, op, input1));
+}
+
+std::map<Node, std::tuple<Node, Operation, Node>> gates;
+
+bool value_of(const Node& node, const auto& xs, const auto& ys)
+{
+	if (node[0] == 'x')
+		return xs[id(node)];
+
+	if (node[0] == 'y')
+		return ys[id(node)];
+
+	const auto it = gates.find(node);
+
+	if (it == gates.end())
+		return false;
+
+	const auto [left, op, right] = it->second;
+
+	return exec(value_of(left, xs, ys), op, value_of(right, xs, ys));
 }
 
 int main(int _, const char*[])
 {
-	std::map<Node, bool> state;
+	std::bitset<InputCount> xs{}; 
+	std::bitset<InputCount> ys{};
 
 	for (std::string line; std::getline(std::cin, line) && !line.empty(); )
-		state.emplace(parse(line), (line[5] == '1'));
-
-	std::vector<Gate> gates;
+	{
+		const auto node = parse_node(line);
+		(node[0] == 'x' ? xs : ys).set(id(node), line[5] == '1');
+	}
 
 	for (std::string line; std::getline(std::cin, line); )
-	{
-		auto& gate = gates.emplace_back();
-		parse(line, gate);
+		gates.emplace(parse_gate(line));
 
-		state.emplace(gate.output, false);
-	}
+	std::bitset<InputCount + 1> zs{};
 
-	for (;;)
-	{
-		for (auto& gate : gates)
-		{
-			const bool a = state[gate.inputs[0]];
-			const bool b = state[gate.inputs[1]];
+	for (int n = 0; n <= InputCount; n++)
+		zs.set(n, value_of(mk_node('z', n), xs, ys));
 
-			gate.set(a, b);
-		}
-
-		bool any_updates = false;
-
-		for (auto& gate : gates)
-		{
-			if (gate.current_value != gate.next_value)
-			{
-				any_updates = true;
-				state[gate.output] = gate.next_value;
-				gate.current_value = gate.next_value;
-			}
-		}
-
-		if (!any_updates)
-			break;
-	}
-
-	const auto lower_it = state.lower_bound(Node{ 'z', '0', '0' });
-	const auto upper_it = state.upper_bound(Node{ 'z', '9', '9' });
-
-	const auto zs = std::ranges::subrange(lower_it, upper_it);
-
-	long long x = 0;
-
-	for (const bool v : zs | std::views::values | std::views::reverse)
-	{
-		x <<= 1;
-		x |= v;
-	}
-
-	std::cout << x;
+	std::cout << zs.to_ullong();
 }
