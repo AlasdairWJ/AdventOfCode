@@ -47,14 +47,14 @@ int main()
 		const auto lower_str = str.substr(0, ix);
 		const auto upper_str = str.substr(ix + 1);
 
-		const i64 lower = *util::from_chars<i64>(lower_str);
-		const i64 upper = *util::from_chars<i64>(upper_str);
+		const i64 lower = *util::parse<i64>(lower_str);
+		const i64 upper = *util::parse<i64>(upper_str);
 
 		const auto half_lower_str = lower_str.substr(0, lower_str.size() / 2);
-		const auto half_lower = *util::from_chars<i64>(half_lower_str);
+		const auto half_lower = *util::parse<i64>(half_lower_str);
 		
 		const auto half_upper_str = upper_str.substr(0, upper_str.size() / 2);
-		const auto half_upper = *util::from_chars<i64>(half_upper_str);
+		const auto half_upper = *util::parse<i64>(half_upper_str);
 		
 		int count = 0;
 

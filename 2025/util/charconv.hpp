@@ -9,7 +9,7 @@ namespace util
 {
 
 template <typename T>
-auto from_chars(const std::string_view str)
+auto parse(const std::string_view str)
 	-> std::expected<T, std::errc> 
 {
 	T value{};

@@ -21,8 +21,8 @@ int main()
 			const auto lower_str = std::string_view{ line }.substr(0, ix);
 			const auto upper_str = std::string_view{ line }.substr(ix + 1);
 
-			const i64 lower = util::parse<i64>(lower_str);
-			const i64 upper = util::parse<i64>(upper_str);
+			const i64 lower = *util::parse<i64>(lower_str);
+			const i64 upper = *util::parse<i64>(upper_str);
 			ranges.emplace_back(lower, upper);
 		}
 	}
@@ -32,30 +32,23 @@ int main()
 		[](const auto& lhs, const auto& rhs) { return lhs.first < rhs.first; }
 	);
 
-	std::vector<std::pair<i64, i64>> new_ranges;
-	decltype(new_ranges)::iterator end_it;
+	decltype(ranges)::iterator it = ranges.begin();
 
-	for (const auto pair : ranges)
+	for (auto next = it + 1; next != ranges.end(); ++next)
 	{
-		if (new_ranges.empty())
+		if (next->first <= it->second)
 		{
-			new_ranges.push_back(pair);
-			end_it = new_ranges.begin();
-		}
-		else if (pair.first <= end_it->second)
-		{
-			if (pair.second > end_it->second)
-				end_it->second = pair.second;
+			it->second = std::max(it->second, next->second);
 		}
 		else
 		{
-			end_it = new_ranges.insert(end_it + 1, pair);
+			*(++it) = *next;
 		}
 	}
 
 	std::cout << std::accumulate(
-		new_ranges.begin(),
-		new_ranges.end(),
+		ranges.begin(),
+		it + 1,
 		0ll,
 		[](const i64 total, const auto& pair)
 		{

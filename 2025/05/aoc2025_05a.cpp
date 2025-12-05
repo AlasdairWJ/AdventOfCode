@@ -21,8 +21,8 @@ int main()
 			const auto lower_str = std::string_view{ line }.substr(0, ix);
 			const auto upper_str = std::string_view{ line }.substr(ix + 1);
 
-			const i64 lower = util::parse<i64>(lower_str);
-			const i64 upper = util::parse<i64>(upper_str);
+			const i64 lower = *util::parse<i64>(lower_str);
+			const i64 upper = *util::parse<i64>(upper_str);
 			ranges.emplace_back(lower, upper);
 		}
 

@@ -16,7 +16,7 @@ int main()
 		const char d = line[0];
 		const auto x_str = std::string_view{ line }.substr(1);
 
-		const int x = *util::from_chars<int>(x_str);
+		const int x = *util::parse<int>(x_str);
 
 		if (d == 'R')
 		{

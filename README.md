@@ -10,7 +10,7 @@ All solutions are written in c++, and make liberal use of modern c++20 language 
 Solutions are designed to take input from file redirection, for example, to run 2021a:
 
 ```
-aoc2021_01a < aoc2021_01a_input.txt
+aoc2021_01a < aoc2021_01a_test.txt
 ```
 
 The test inputs are provided in `\*_test.txt` files.

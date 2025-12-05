@@ -62,8 +62,8 @@ int main()
 		const int lower_size = static_cast<int>(lower_str.size());
 		const int upper_size = static_cast<int>(upper_str.size());
 
-		const i64 lower = *util::from_chars<i64>(lower_str);
-		const i64 upper = *util::from_chars<i64>(upper_str);
+		const i64 lower = *util::parse<i64>(lower_str);
+		const i64 upper = *util::parse<i64>(upper_str);
 
 		for (int d = 1; d <= upper_size / 2; d++)
 		{
