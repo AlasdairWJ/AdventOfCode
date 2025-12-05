@@ -13,4 +13,4 @@ Solutions are designed to take input from file redirection, for example, to run 
 aoc2021_01a < aoc2021_01a_input.txt
 ```
 
-Both example (test) data and my inputs are provided, all solutions should be able to run both `\*_test.txt` data and `\*_input.txt`. 
+The test inputs are provided in `\*_test.txt` files.
