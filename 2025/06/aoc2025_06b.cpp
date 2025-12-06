@@ -34,38 +34,34 @@ int main()
 	const std::string op_row = lines.back();
 	lines.erase(lines.end() - 1);
 
-	char current_op = op_row[0];
-	const int rows = static_cast<int>(lines.size());
-	const int len = static_cast<int>(lines.front().size());
+	const std::size_t len = op_row.size();
 
 	i64 total{};
-	std::vector<i64> items;
 
-	for (int ix = 0; ix < len; ix++)
+	for (std::size_t ix = 0, next_ix; ix < len; ix = next_ix)
 	{
-		if (op_row[ix] != ' ')
-			current_op = op_row[ix];
+		const char op = op_row[ix];
 
-		i64 x{};
-		for (const auto& row : lines)
+		next_ix = std::min(op_row.find_first_not_of(' ', ix + 1), len);
+
+		std::vector<i64> items;
+
+		for (; ix < next_ix; ix++)
 		{
-			if (row[ix] != ' ')
-				x = 10 * x + digit(row[ix]);
+			i64 x{};
+
+			for (const auto& row : lines)
+			{
+				if (row[ix] != ' ')
+					x = 10 * x + digit(row[ix]);
+			}
+
+			if (x != 0)
+				items.push_back(x);
 		}
 
-		if (x != 0)
-		{
-			items.push_back(x);
-		}
-		else
-		{
-			total += accumulate(items, current_op);
-			items.clear();
-		}
+		total += accumulate(items, op);
 	}
-
-	if (!items.empty())
-		total += accumulate(items, current_op);
 
 	std::cout << total;
 }

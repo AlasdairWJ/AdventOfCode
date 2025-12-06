@@ -1,5 +1,6 @@
 #include <iostream>
 #include <string>
+#include <string_view>
 #include <vector>
 #include <numeric>
 #include <charconv>
@@ -29,30 +30,31 @@ int main()
 	const std::string op_row = lines.back();
 	lines.erase(lines.end() - 1);
 
-	const std::size_t len = lines[0].size();
+	const std::size_t len = op_row.size();
 
 	i64 total{};
 
-	for (std::size_t ix = 0; ix < len; )
+	for (std::size_t ix = 0, next_ix; ix < len; ix = next_ix)
 	{
+		next_ix = std::min(op_row.find_first_not_of(' ', ix + 1), len);
+
 		std::vector<i64> items;
 
 		for (const std::string& row : lines)
 		{
-			const std::size_t num_start_ix = row.find_first_not_of(' ', ix);
-			std::size_t num_end_ix = row.find(' ', num_start_ix);
+			const auto str = std::string_view{ row }.substr(ix, next_ix - 1); 
+			const std::size_t num_start_ix = str.find_first_not_of(' ');
+			const std::size_t num_end_ix = std::min(str.find(' ', num_start_ix), str.size());
 
-			if (num_end_ix == std::string::npos)
-				num_end_ix = row.size();
-
-			std::from_chars(row.data() + num_start_ix, row.data() + num_end_ix, items.emplace_back());
+			std::from_chars(
+				str.data() + num_start_ix, 
+				str.data() + num_end_ix, 
+				items.emplace_back()
+			);
 		}
 
-		total += accumulate(items, op_row[ix]);;
-
-		ix = op_row.find_first_not_of(' ', ix + 1);
+		total += accumulate(items, op_row[ix]);
 	}
 
 	std::cout << total;
 }
-//		
