@@ -5,6 +5,7 @@
 #include <algorithm>
 #include <numeric>
 
+#include "../util/separate.hpp"
 #include "../util/charconv.hpp"
 
 typedef long long i64;
@@ -17,10 +18,7 @@ int main()
 		std::string line;
 		while (std::getline(std::cin, line), !line.empty())
 		{
-			const auto ix = line.find('-');
-			const auto lower_str = std::string_view{ line }.substr(0, ix);
-			const auto upper_str = std::string_view{ line }.substr(ix + 1);
-
+			const auto [lower_str, upper_str] = util::separate(line, '-');
 			const i64 lower = *util::parse<i64>(lower_str);
 			const i64 upper = *util::parse<i64>(upper_str);
 			ranges.emplace_back(lower, upper);
@@ -47,9 +45,7 @@ int main()
 	}
 
 	std::cout << std::accumulate(
-		ranges.begin(),
-		it + 1,
-		0ll,
+		ranges.begin(), it + 1, i64{},
 		[](const i64 total, const auto& pair)
 		{
 			return total + (pair.second - pair.first + 1);
