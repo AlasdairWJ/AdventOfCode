@@ -8,7 +8,7 @@
 namespace util
 {
 
-template <typename T>
+template <typename T = int>
 auto parse(const std::string_view str)
 	-> std::expected<T, std::errc> 
 {
