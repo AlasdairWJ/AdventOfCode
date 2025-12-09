@@ -62,14 +62,12 @@ int main()
 		auto it = connections.begin();
 
 		for (int x = 0; x < size; x++)
+		for (int y = x + 1; y < size; y++)
 		{
-			for (int y = x + 1; y < size; y++)
-			{
-				*(it++) = Connection{
-					x, y,
-					distance(points[x], points[y])
-				};
-			}
+			*(it++) = Connection{
+				x, y,
+				distance(points[x], points[y])
+			};
 		}
 
 		std::ranges::sort(
