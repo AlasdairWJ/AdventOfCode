@@ -6,6 +6,7 @@
 #include <numeric>
 #include <functional>
 #include <set>
+#include <ranges>
 
 #include "../util/separate.hpp"
 #include "../util/charconv.hpp"
@@ -29,6 +30,7 @@ struct Connection
 	int ix_b;
 	double distance;
 };
+
 
 int main(const int argc, const char* argv[])
 {
@@ -80,41 +82,35 @@ int main(const int argc, const char* argv[])
 	for (const auto& c : connections)
 		grid[c.ix_a, c.ix_b] = true;
 
+	std::vector<bool> visited(size);
+
+	auto visit_and_count = [&](this auto self, const int ix) -> int
+	{
+		visited[ix] = true;
+
+		int count = 1;
+
+		for (int other_ix = 0; other_ix < size; other_ix++)
+		{
+			if (ix != other_ix && grid[ix, other_ix] && !visited[other_ix])
+				count += self(other_ix);
+		}
+
+		return count;
+	};
+
 	int total = 1;
 
 	std::multiset<int, std::greater<int>> sizes;
 
-	for (int i = 0; i < size; i++)
+	for (int ix = 0; ix < size; ix++)
 	{
-		std::set<int> all;
-		
-		for (std::set<int> current{ i }; !current.empty(); )
+		if (!visited[ix])
 		{
-			all.insert_range(current);
-
-			decltype(current) next;
-
-			for (const int ix : current)
-			{
-				for (int ix2 = 0; ix2 < size; ix2++)
-				{
-					if (ix != ix2 && grid[ix, ix2])
-					{
-						grid[ix, ix2] = false;
-						next.insert(ix2);
-					}
-				}
-			}
-
-			current.swap(next);
+			const int size = visit_and_count(ix);
+			sizes.insert(size);
 		}
-
-		if (all.size() != 1)
-			sizes.insert(static_cast<int>(all.size()));
 	}
 
-	std::cout << std::accumulate(sizes.begin(), std::next(sizes.begin(), 3), 1, std::multiplies{});
+	std::cout << std::ranges::fold_left(sizes | std::views::take(3), 1, std::multiplies{});
 }
-
-// bad: 694157312
-// bad: 12688
